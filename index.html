@@ -1,0 +1,3215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IM HOST | Web Development, Cyber Security &amp; API Integration</title>
+    <link rel="icon" type="image/svg+xml" href="/im-host-logo.svg">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+        rel="stylesheet">
+    <style>
+        /* Fallback fonts if Google Fonts fails */
+        @import url('data:text/css,');
+    </style>
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, 0.07);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-hover: rgba(255, 255, 255, 0.12);
+            --accent: #00f5c4;
+            --accent2: #7b61ff;
+            --accent3: #ff6b6b;
+            --bg: #050a12;
+            --bg2: #080f1a;
+            --text: #e8f0fe;
+            --muted: rgba(232, 240, 254, 0.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            cursor: none;
+        }
+
+        /* CUSTOM CURSOR */
+        .cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+
+
+
+        /* BACKGROUND EFFECTS */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 70% 50% at 20% 20%, rgba(0, 245, 196, 0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 60% at 80% 80%, rgba(123, 97, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 60% 10%, rgba(255, 107, 107, 0.04) 0%, transparent 50%);
+        }
+
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* NAV */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 18px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(5, 10, 18, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .nav-logo {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links li {
+            margin: 0;
+            padding: 0;
+            display: inline-block;
+        }
+
+        .nav-links li+li {
+            margin-left: 28px;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        .nav-links a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .nav-cta {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, rgba(0, 245, 196, 0.15), rgba(123, 97, 255, 0.15));
+            border: 1px solid rgba(0, 245, 196, 0.4);
+            color: var(--accent);
+            text-decoration: none;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: 'Syne', sans-serif;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(0, 245, 196, 0.1);
+        }
+
+        .nav-cta:hover {
+            background: var(--accent);
+            color: var(--bg);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 245, 196, 0.4);
+            border-color: var(--accent);
+        }
+
+        .nav-cta::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 100px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .nav-cta:hover::after {
+            opacity: 0.15;
+        }
+
+        @keyframes nav-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(0, 245, 196, 0.1);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(0, 245, 196, 0.3);
+            }
+        }
+
+        .nav-cta {
+            animation: nav-glow 3s infinite;
+        }
+
+        /* WA FLOAT */
+        .wa-float {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 999;
+            width: 60px;
+            height: 60px;
+            background: #25d366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 25px rgba(37, 211, 102, 0.3);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+        }
+
+        .wa-float:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 12px 35px rgba(37, 211, 102, 0.4);
+        }
+
+        .wa-float svg {
+            width: 32px;
+            height: 32px;
+            fill: #fff;
+        }
+
+        .wa-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: #ff4757;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 6px;
+            border-radius: 100px;
+            border: 2px solid var(--bg);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* GLASS CARD */
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+        }
+
+        /* HERO */
+        #hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 5% 80px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 245, 196, 0.1);
+            border: 1px solid rgba(0, 245, 196, 0.25);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+        }
+
+        .hero-tag span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(1.3);
+            }
+        }
+
+        .hero-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2.8rem, 5vw, 4.2rem);
+            font-weight: 800;
+            line-height: 1.08;
+            letter-spacing: -1.5px;
+            margin-bottom: 20px;
+        }
+
+        .hero-title .grad {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-sub {
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 36px;
+            max-width: 480px;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 13px 28px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Syne', sans-serif;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 245, 196, 0.3);
+        }
+
+        .btn-secondary {
+            padding: 13px 28px;
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 0.92rem;
+            cursor: pointer;
+            text-decoration: none;
+            backdrop-filter: blur(8px);
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-hover);
+            border-color: var(--accent);
+        }
+
+        /* HERO AVATAR CARD */
+        .hero-visual {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .avatar-card {
+            padding: 36px;
+            text-align: center;
+            position: relative;
+            width: 300px;
+        }
+
+        .avatar-ring {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            position: relative;
+            animation: float 4s ease-in-out infinite;
+            overflow: hidden;
+            border: 3px solid var(--accent);
+            box-shadow: 0 0 30px rgba(0, 245, 196, 0.4);
+            background: var(--bg);
+        }
+
+        .avatar-ring img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 50%;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        .avatar-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .avatar-role {
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 10px 6px;
+        }
+
+        .stat-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        /* FLOATING BADGES */
+        .float-badge {
+            position: absolute;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(12px);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .fb1 {
+            top: -10px;
+            right: -30px;
+            color: var(--accent);
+            animation: float 3s 0.5s ease-in-out infinite;
+        }
+
+        .fb2 {
+            bottom: 40px;
+            left: -40px;
+            color: var(--accent2);
+            animation: float 3.5s 1s ease-in-out infinite;
+        }
+
+        /* SECTION */
+        section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 5%;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.15;
+        }
+
+        .section-sub {
+            color: var(--muted);
+            font-size: 1rem;
+            margin-top: 12px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        /* SERVICES */
+        #services {
+            background: var(--bg2);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .service-card {
+            padding: 32px;
+            border-radius: 16px;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.03));
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .service-card:hover::before {
+            opacity: 1;
+        }
+
+        .service-icon {
+            font-size: 2.2rem;
+            margin-bottom: 18px;
+        }
+
+        .service-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .service-desc {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.65;
+        }
+
+        .service-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 16px;
+        }
+
+        .stag {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* SKILLS */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .scard {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            border-radius: 14px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .scard:hover {
+            transform: translateY(-5px);
+            border-color: rgba(0, 245, 196, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .scard img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+        }
+
+        .sc-info {
+            flex: 1;
+        }
+
+        .sc-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .sc-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .sc-pct {
+            color: var(--accent);
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .skill-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.07);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            height: 100%;
+            border-radius: 100px;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 1.5s ease;
+            width: 0;
+        }
+
+        /* PORTFOLIO */
+        #portfolio {
+            background: var(--bg2);
+        }
+
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .project-card {
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .project-thumb {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+        }
+
+        .pt1 {
+            background: linear-gradient(135deg, rgba(0, 245, 196, 0.2), rgba(123, 97, 255, 0.2));
+        }
+
+        .pt2 {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 200, 100, 0.2));
+        }
+
+        .pt3 {
+            background: linear-gradient(135deg, rgba(123, 97, 255, 0.2), rgba(0, 245, 196, 0.15));
+        }
+
+        .project-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(5, 10, 18, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            gap: 12px;
+        }
+
+        .project-card:hover .project-overlay {
+            opacity: 1;
+        }
+
+        .project-body {
+            padding: 24px;
+        }
+
+        .project-type {
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .project-name {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .project-desc {
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* PROCESS */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .step-card {
+            padding: 28px;
+            border-radius: 14px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-num {
+            font-family: 'Syne', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 12px;
+        }
+
+        .step-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .step-desc {
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* TESTIMONIALS */
+        #testimonials {
+            background: var(--bg2);
+        }
+
+        .testi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .testi-card {
+            padding: 28px;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+
+        .testi-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .testi-stars {
+            color: #ffc107;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+        }
+
+        .testi-text {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .testi-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .testi-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #000;
+        }
+
+        .testi-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .testi-role {
+            color: var(--muted);
+            font-size: 0.75rem;
+        }
+
+        /* CONTACT */
+        #contact {
+            position: relative;
+        }
+
+        .contact-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 50px;
+            align-items: start;
+        }
+
+        .contact-info h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .contact-info p {
+            color: var(--muted);
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 18px;
+            padding: 16px;
+            border-radius: 12px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .contact-item:hover {
+            border-color: var(--accent);
+            background: rgba(0, 245, 196, 0.05);
+        }
+
+        .contact-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .ci-green {
+            background: rgba(0, 245, 196, 0.12);
+        }
+
+        .ci-purple {
+            background: rgba(123, 97, 255, 0.12);
+        }
+
+        .ci-red {
+            background: rgba(255, 107, 107, 0.12);
+        }
+
+        .contact-detail {
+            flex: 1;
+        }
+
+        .contact-detail small {
+            color: var(--muted);
+            font-size: 0.75rem;
+            display: block;
+        }
+
+        .contact-detail span {
+            font-weight: 500;
+            font-size: 0.92rem;
+        }
+
+        .wa-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, #25d366, #128c7e);
+            color: #fff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: all 0.3s;
+            margin-top: 24px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Syne', sans-serif;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.25);
+        }
+
+        .wa-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 40px rgba(37, 211, 102, 0.4);
+        }
+
+        .wa-icon {
+            font-size: 1.5rem;
+        }
+
+        /* CONTACT FORM */
+        .contact-form {
+            padding: 36px;
+            border-radius: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            margin-bottom: 7px;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+            background: rgba(0, 245, 196, 0.04);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group select option {
+            background: #0d1525;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #000;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.3px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 245, 196, 0.3);
+        }
+
+        /* PRIVACY POLICY */
+        #privacy {
+            background: var(--bg2);
+        }
+
+        .privacy-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        .privacy-content h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin: 28px 0 10px;
+            color: var(--accent);
+        }
+
+        .privacy-content p {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            margin-bottom: 12px;
+        }
+
+        .privacy-content ul {
+            color: var(--muted);
+            font-size: 0.9rem;
+            line-height: 1.8;
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+
+        .privacy-content ul li {
+            margin-bottom: 6px;
+        }
+
+        .privacy-last {
+            font-size: 0.82rem;
+            color: rgba(232, 240, 254, 0.3);
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        /* PRIVACY CONTACT WHATSAPP */
+        .privacy-contact-box {
+            margin-top: 28px;
+            padding: 20px 24px;
+            border-radius: 14px;
+            border: 1px solid rgba(37, 211, 102, 0.3);
+            background: rgba(37, 211, 102, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .privacy-contact-box p {
+            color: var(--text);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .privacy-contact-box small {
+            color: var(--muted);
+            display: block;
+            font-size: 0.8rem;
+            margin-top: 3px;
+        }
+
+        /* FOOTER */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 60px 5% 30px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-top {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 50px;
+        }
+
+        .footer-brand p {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.7;
+            margin: 12px 0 24px;
+            max-width: 280px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 10px;
+        }
+
+        .soc-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .soc-btn:hover {
+            border-color: var(--accent);
+            background: rgba(0, 245, 196, 0.1);
+        }
+
+        .footer-col h4 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            margin-bottom: 18px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col ul li a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 0.87rem;
+            transition: color 0.3s;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--accent);
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .footer-bottom p {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        .footer-bottom a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer-wa {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.15), rgba(18, 140, 126, 0.1));
+            border: 1px solid rgba(37, 211, 102, 0.25);
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .footer-wa:hover {
+            border-color: rgba(37, 211, 102, 0.6);
+            background: rgba(37, 211, 102, 0.2);
+        }
+
+        /* SCROLL TOP */
+        .scroll-top {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 100;
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #000;
+            transition: all 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            border: none;
+            box-shadow: 0 8px 20px rgba(0, 245, 196, 0.3);
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .scroll-top:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        /* HAMBURGER */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 2px;
+            background: var(--text);
+            border-radius: 2px;
+            transition: all 0.3s;
+        }
+
+        /* ANIMATIONS - starts visible, animates on scroll */
+        .fade-in {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.7s ease;
+        }
+
+        .fade-in.hidden {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* RAINBOW TEXT */
+        @keyframes rainbow-shift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .rainbow-text {
+            background: linear-gradient(90deg,
+                    #ff0080, #ff4d00, #ffcc00, #00ff88,
+                    #00cfff, #7b61ff, #ff00c8, #ff0080);
+            background-size: 300% 300%;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 4s linear infinite;
+        }
+
+        /* TYPEWRITER */
+        .typewriter-wrap {
+            display: inline-block;
+        }
+
+        /* WORD-BY-WORD REVEAL */
+        .word-animate span {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(20px) scale(0.9);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .word-animate.active span {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .typewriter {
+            border-right: 3px solid var(--accent);
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            animation: blink-caret 0.7s step-end infinite;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: inherit;
+        }
+
+        @keyframes blink-caret {
+
+            0%,
+            100% {
+                border-color: var(--accent);
+            }
+
+            50% {
+                border-color: transparent;
+            }
+        }
+
+        /* BLACK AI-PROMPT PORTFOLIO CARDS */
+        .project-card {
+            background: #000 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        .project-card:hover {
+            border-color: rgba(255, 255, 255, 0.25) !important;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 30px 60px rgba(0, 0, 0, 0.7) !important;
+        }
+
+        /* AI PROMPT STYLE THUMB */
+        .project-thumb {
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .project-thumb {
+            padding: 48px 16px 20px;
+            justify-content: flex-end;
+            align-items: flex-end;
+            flex-direction: column;
+            height: 180px;
+        }
+
+        .pt1 {
+            background: linear-gradient(160deg, #0a0a0a 0%, #0d1a0f 100%) !important;
+        }
+
+        .pt2 {
+            background: linear-gradient(160deg, #0a0a0a 0%, #150a0d 100%) !important;
+        }
+
+        .pt3 {
+            background: linear-gradient(160deg, #0a0a0a 0%, #0a0d1a 100%) !important;
+        }
+
+        .project-body {
+            background: #000;
+        }
+
+        .project-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+        }
+
+        .project-tech {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .ptag {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-family: monospace;
+        }
+
+        @media(max-width:480px) {
+            .hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-visual {
+                margin-top: 30px;
+            }
+
+            .fb1,
+            .fb2 {
+                display: none;
+            }
+
+            .contact-wrap {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .footer-top .footer-brand p {
+                max-width: 100%;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            body {
+                cursor: auto;
+            }
+
+            .cursor {
+                display: none;
+            }
+        }
+
+        @media(max-width:600px) {
+            nav {
+                padding: 14px 4%;
+            }
+
+            section {
+                padding: 70px 4%;
+            }
+
+            .hero-title {
+                font-size: 2.3rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        /* IM HOST BRANDING & CHARGES CHART STYLES */
+        .im-brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: transform 0.3s;
+        }
+        .im-brand-logo:hover {
+            transform: translateY(-1px);
+        }
+        .im-logo-icon {
+            width: 42px;
+            height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 245, 196, 0.2), rgba(123, 97, 255, 0.25));
+            border: 1.5px solid rgba(0, 245, 196, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 245, 196, 0.25);
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .im-logo-text-title {
+            font-family: 'Syne', sans-serif;
+            font-weight: 900;
+            font-size: 1.4rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.1;
+        }
+        .im-logo-sub {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 2.5px;
+            color: rgba(232, 240, 254, 0.65);
+            text-transform: uppercase;
+        }
+
+        /* API CHARGES CHART TABLE */
+        .charges-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            margin: 40px 0 20px 0;
+            border-radius: 18px;
+            border: 1px solid var(--glass-border);
+            background: rgba(8, 15, 26, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+        .charges-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.92rem;
+            min-width: 680px;
+        }
+        .charges-table th {
+            background: rgba(0, 245, 196, 0.08);
+            padding: 16px 20px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .charges-table td {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text);
+            vertical-align: middle;
+        }
+        .charges-table tr:hover td {
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .charges-table tr:last-child td {
+            border-bottom: none;
+        }
+        .rate-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--accent);
+            padding: 4px 12px;
+            border-radius: 8px;
+            background: rgba(0, 245, 196, 0.12);
+            border: 1px solid rgba(0, 245, 196, 0.3);
+            white-space: nowrap;
+        }
+        .rate-badge.purple {
+            color: #bfaaff;
+            background: rgba(123, 97, 255, 0.15);
+            border-color: rgba(123, 97, 255, 0.35);
+        }
+        .sla-pill {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.06);
+            padding: 3px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .order-btn-mini {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--accent), #00c49f);
+            color: #050a12;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            font-family: 'Syne', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 245, 196, 0.2);
+        }
+        .order-btn-mini:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 245, 196, 0.4);
+        }
+
+        /* LIVE API CONSOLE WIDGET */
+        .api-console-box {
+            margin-top: 35px;
+            border-radius: 16px;
+            background: rgba(5, 10, 18, 0.85);
+            border: 1px solid rgba(0, 245, 196, 0.3);
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 245, 196, 0.08);
+        }
+        .api-console-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .api-console-input-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .api-console-input {
+            flex-grow: 1;
+            min-width: 260px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: #fff;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .api-console-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 245, 196, 0.3);
+        }
+        .api-console-result {
+            margin-top: 15px;
+            background: #02060c;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Consolas', 'Fira Code', monospace;
+            font-size: 0.85rem;
+            color: #00f5c4;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: none;
+        }
+
+
+    
+        /* PROFESSIONAL PORTFOLIO & CASE STUDIES */
+        .case-studies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            margin-top: 40px;
+        }
+        .case-study-card {
+            background: rgba(8, 15, 26, 0.7);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .case-study-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(0, 245, 196, 0.4);
+            box-shadow: 0 16px 40px rgba(0, 245, 196, 0.12);
+        }
+        .case-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        .case-category {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .live-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #00f5c4;
+            background: rgba(0, 245, 196, 0.12);
+            padding: 3px 10px;
+            border-radius: 100px;
+            border: 1px solid rgba(0, 245, 196, 0.3);
+        }
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #00f5c4;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00f5c4;
+            animation: pulse-dot 2s infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+        .case-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .case-desc {
+            color: var(--muted);
+            font-size: 0.88rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+        .case-metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .case-metric-val {
+            font-family: 'Syne', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            color: var(--accent);
+        }
+        .case-metric-lbl {
+            font-size: 0.7rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+        .case-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        /* INFRASTRUCTURE STACK CARDS */
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        .infra-card {
+            background: rgba(8, 15, 26, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(14px);
+            transition: all 0.3s;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .infra-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(123, 97, 255, 0.4);
+            box-shadow: 0 12px 30px rgba(123, 97, 255, 0.1);
+        }
+        .infra-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(0, 245, 196, 0.1);
+            border: 1px solid rgba(0, 245, 196, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+        .infra-icon-box.purple {
+            background: rgba(123, 97, 255, 0.12);
+            border-color: rgba(123, 97, 255, 0.3);
+        }
+        .infra-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+        .infra-desc {
+            font-size: 0.84rem;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .infra-badge {
+            margin-top: 8px;
+            display: inline-block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="cursor" id="cursor"></div>
+    <div class="bg-mesh"></div>
+    <div class="grid-bg"></div>
+
+    <!-- NAV -->
+    <!-- SVG Global Defs -->
+    <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="im-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00f5c4" />
+                <stop offset="50%" stop-color="#38bdf8" />
+                <stop offset="100%" stop-color="#7b61ff" />
+            </linearGradient>
+            <linearGradient id="im-accent-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#00f5c4" />
+                <stop offset="100%" stop-color="#7b61ff" />
+            </linearGradient>
+            <filter id="im-glow-filter" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                </feMerge>
+            </filter>
+        </defs>
+    </svg>
+
+    <!-- NAV -->
+    <nav>
+        <a href="/profile#hero" class="im-brand-logo">
+            <div class="im-logo-icon">
+                <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+                    <polygon points="16,2 29,9.5 29,22.5 16,30 3,22.5 3,9.5" stroke="url(#im-grad)" stroke-width="2" fill="rgba(5,10,18,0.7)"/>
+                    <polygon points="16,7 24,11.5 16,16 8,11.5" fill="rgba(0,245,196,0.3)" stroke="#00f5c4" stroke-width="1.2"/>
+                    <polygon points="16,12.5 24,17 16,21.5 8,17" fill="rgba(123,97,255,0.35)" stroke="#7b61ff" stroke-width="1.2"/>
+                    <polygon points="16,18 24,22.5 16,27 8,22.5" fill="rgba(0,245,196,0.2)" stroke="#00f5c4" stroke-width="1.2"/>
+                    <circle cx="16" cy="11.5" r="1.5" fill="#00f5c4"/>
+                    <circle cx="16" cy="17" r="1.5" fill="#ffffff"/>
+                    <circle cx="16" cy="22.5" r="1.5" fill="#7b61ff"/>
+                </svg>
+            </div>
+            <div>
+                <div class="im-logo-text-title">
+                    <span style="color:#ffffff;">IM</span>
+                    <span style="background:linear-gradient(90deg, #00f5c4, #7b61ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 20px rgba(0,245,196,0.35);">HOST</span>
+                    <span style="display:inline-block; width:6px; height:6px; background:#00f5c4; border-radius:50%; box-shadow:0 0 8px #00f5c4; margin-bottom:2px;"></span>
+                </div>
+                <div class="im-logo-sub">Web Dev &bull; Cyber Security &bull; API Audit</div>
+            </div>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#hero">Home</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#api-charges">API Charges</a></li>
+            <li><a href="#skills">Infrastructure</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#privacy">Legal</a></li>
+        </ul>
+        <a href="https://wa.me/94776671098" target="_blank" class="nav-cta">⚡ Instant Support</a>
+        <div class="hamburger" id="hamburger">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+        <div class="hero-inner">
+            <div class="hero-left fade-in">
+                <div class="hero-tag"><span></span> 🛡️ Cyber Security &bull; Web Development &bull; System Audits</div>
+                <h1 class="hero-title">
+                    <span id="hi-text" class="typewriter"></span><br>
+                    <span class="rainbow-text" style="display:inline-block">IM HOST</span>
+                </h1>
+                <p class="hero-sub word-animate-target">
+                    Specialized in Full-Stack Web Development, Cyber Security &amp; Protection System Building, System &amp; Vulnerability Auditing, and Rapid API Integration Checking starting from just Rs. 100.
+                </p>
+                <div class="hero-btns">
+                    <a href="#api-charges" class="btn-primary">⚡ View API Rates &amp; Charges</a>
+                    <a href="https://wa.me/94776671098" target="_blank" class="btn-secondary">💬 WhatsApp Hotline</a>
+                </div>
+            </div>
+            <div class="hero-visual fade-in">
+                <div class="avatar-card glass" style="position:relative;">
+                    <div class="float-badge fb1">🛡️ Security Hardened</div>
+                    <div class="float-badge fb2">🛡️ DDoS &amp; SSL Shield</div>
+                    <div class="avatar-ring" style="display:flex; align-items:center; justify-content:center; background: radial-gradient(circle, rgba(0,245,196,0.18) 0%, rgba(123,97,255,0.22) 60%, rgba(5,10,18,0.92) 100%);">
+                        <svg width="112" height="112" viewBox="0 0 100 100" fill="none">
+                            <polygon points="50,6 88,28 88,72 50,94 12,72 12,28" stroke="url(#im-grad)" stroke-width="2.5" fill="rgba(8,15,26,0.85)"/>
+                            <polygon points="50,20 74,32 50,44 26,32" fill="rgba(0,245,196,0.25)" stroke="#00f5c4" stroke-width="1.5"/>
+                            <polygon points="50,36 74,48 50,60 26,48" fill="rgba(123,97,255,0.3)" stroke="#7b61ff" stroke-width="1.5"/>
+                            <polygon points="50,52 74,64 50,76 26,64" fill="rgba(0,245,196,0.2)" stroke="#00f5c4" stroke-width="1.5"/>
+                            <circle cx="50" cy="32" r="3" fill="#00f5c4"/>
+                            <circle cx="50" cy="48" r="3" fill="#ffffff"/>
+                            <circle cx="50" cy="64" r="3" fill="#7b61ff"/>
+                            <circle cx="38" cy="28" r="2" fill="#00f5c4"/>
+                            <circle cx="62" cy="44" r="2" fill="#7b61ff"/>
+                        </svg>
+                    </div>
+                    <div class="avatar-name">IM HOST</div>
+                    <div class="avatar-role">Cyber Security, Web Dev &amp; API Integration</div>
+                    <div class="stat-row">
+                        <div class="stat-item">
+                            <div class="stat-num">100%</div>
+                            <div class="stat-label">Security Focus</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">Rs. 100+</div>
+                            <div class="stat-label">API Checks</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-num">&lt; 15ms</div>
+                            <div class="stat-label">Fast Ping</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES -->
+    <section id="services">
+        <div class="section-header fade-in">
+            <div class="section-tag">Core Capabilities</div>
+            <h2 class="section-title">Web Development, Security &amp; <span class="rainbow-text">API Services</span></h2>
+            <p class="section-sub">Comprehensive web application development, custom cyber protection systems, vulnerability auditing, and rapid API testing</p>
+        </div>
+        <div class="services-grid">
+            <div class="service-card glass fade-in">
+                <div class="service-icon">🛡️</div>
+                <div class="service-title">Cyber Security &amp; Protection Systems</div>
+                <div class="service-desc">We build custom web security shields, Web Application Firewalls (WAF), anti-bot defenses, brute-force login protection, and robust token encryption systems.</div>
+                <div class="service-tags"><span class="stag">WAF Shield</span><span class="stag">DDoS Defense</span><span class="stag">Token Security</span></div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-icon">🔍</div>
+                <div class="service-title">System &amp; Vulnerability Auditing</div>
+                <div class="service-desc">Thorough security assessments of existing websites, identifying SQL injection, XSS flaws, token leaks, and system architecture vulnerabilities with detailed remediation reports.</div>
+                <div class="service-tags"><span class="stag">Security Audit</span><span class="stag">Vulnerability Scan</span><span class="stag">Code Review</span></div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-icon">🔌</div>
+                <div class="service-title">API Integration &amp; Testing</div>
+                <div class="service-desc">Comprehensive API checking, payload validation, and seamless integrations starting from just Rs. 100. REST, GraphQL, Webhook, and Payment Gateway verification.</div>
+                <div class="service-tags"><span class="stag">From Rs. 100</span><span class="stag">REST APIs</span><span class="stag">Webhooks</span></div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-icon">💻</div>
+                <div class="service-title">Full-Stack Web Development</div>
+                <div class="service-desc">High-performance, responsive web applications and custom business portals built with modern frameworks and hardened security architectures.</div>
+                <div class="service-tags"><span class="stag">Custom Web Apps</span><span class="stag">React / Node</span><span class="stag">PHP / MySQL</span></div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-icon">🛒</div>
+                <div class="service-title">E-Commerce &amp; Payment Bridges</div>
+                <div class="service-desc">Full online stores with automated, secure payment gateway integrations (PayHere, Stripe) featuring HMAC-SHA256 signature verification and fraud protection.</div>
+                <div class="service-tags"><span class="stag">PayHere</span><span class="stag">Stripe</span><span class="stag">HMAC Hash</span></div>
+            </div>
+            <div class="service-card glass fade-in">
+                <div class="service-icon">⚙️</div>
+                <div class="service-title">System Maintenance &amp; Bug Fixing</div>
+                <div class="service-desc">Ongoing website maintenance, regular vulnerability patching, security monitoring, database optimization, and rapid bug resolution support.</div>
+                <div class="service-tags"><span class="stag">Security Patches</span><span class="stag">Bug Fixes</span><span class="stag">24/7 Support</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING & API CHARGES CHART -->
+    <section id="pricing" style="background: var(--bg);">
+        <div class="section-header fade-in">
+            <div class="section-tag">Clear &amp; Transparent Rates</div>
+            <h2 class="section-title">API Integration &amp; <span class="rainbow-text">Charges Chart</span></h2>
+            <p class="section-sub">Affordable, transparent pricing with zero hidden fees. From micro API endpoint checks starting at just Rs. 100 to full cyber security protection and custom web development.</p>
+        </div>
+
+        <!-- Quick Summary Ribbon -->
+        <div style="display:flex; justify-content:center; gap:12px; margin-bottom:40px; flex-wrap:wrap;">
+            <div style="background:rgba(0,245,196,0.1); border:1px solid rgba(0,245,196,0.3); border-radius:100px; padding:6px 16px; font-size:0.82rem; font-weight:700; color:var(--accent);">⚡ Micro API Check: Rs. 100</div>
+            <div style="background:rgba(123,97,255,0.12); border:1px solid rgba(123,97,255,0.3); border-radius:100px; padding:6px 16px; font-size:0.82rem; font-weight:700; color:#bfaaff;">🔌 Basic Integration: Rs. 200</div>
+            <div style="background:rgba(0,245,196,0.1); border:1px solid rgba(0,245,196,0.3); border-radius:100px; padding:6px 16px; font-size:0.82rem; font-weight:700; color:var(--accent);">🪝 Webhook &amp; Payment: Rs. 300</div>
+            <div style="background:rgba(255,107,107,0.12); border:1px solid rgba(255,107,107,0.3); border-radius:100px; padding:6px 16px; font-size:0.82rem; font-weight:700; color:#ff9e9e;">🚀 Pro Pipeline: Rs. 500</div>
+            <div style="background:rgba(123,97,255,0.15); border:1px solid rgba(123,97,255,0.4); border-radius:100px; padding:6px 16px; font-size:0.82rem; font-weight:700; color:#ffffff;">🏢 Enterprise Suite: Rs. 1,000+</div>
+        </div>
+
+        <!-- API INTEGRATION & CHECKING TIERS (Rs 100, 200, 300, 500, 1000+) -->
+        <h3 id="api-charges" style="font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; text-align:center; margin-bottom:25px; color:var(--text);">
+            ⚡ API Integration &amp; Endpoint Checking Packages
+        </h3>
+
+        <div class="services-grid" style="gap: 25px; margin-bottom: 50px;">
+            <!-- Plan: Rs. 100 -->
+            <div class="service-card glass fade-in" style="display: flex; flex-direction: column; position: relative;">
+                <div style="position: absolute; top: 0; right: 0; background: rgba(0, 245, 196, 0.2); color: var(--accent); font-size: 0.68rem; font-weight: 800; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif; border-left: 1px solid rgba(0,245,196,0.3); border-bottom: 1px solid rgba(0,245,196,0.3);">QUICK CHECK</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Tier 1</div>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; margin-bottom: 12px;">Micro API Ping Check</h3>
+                <div style="font-size: 2.2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); margin-bottom: 8px;">
+                    Rs. 100 <span style="font-size: 0.85rem; color: var(--muted); font-weight: 500;">/ single test</span>
+                </div>
+                <p style="color: var(--muted); font-size: 0.86rem; margin-bottom: 20px;">Instant verification of endpoint availability, response latency, and SSL certificate validity.</p>
+                <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">1 Target API Endpoint Ping &amp; Status Check</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Response Time &amp; Latency Benchmark (&lt; ms)</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">SSL / TLS Protocol &amp; Expiry Verification</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">HTTP Status Code Validation (200 / 4xx / 5xx)</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Turnaround: Instant (Under 15 Mins)</span></li>
+                </ul>
+                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20would%20like%20to%20order%20the%20Micro%20API%20Ping%20Check%20for%20Rs.%20100" target="_blank" class="btn-secondary" style="width: 100%; justify-content: center; font-size:0.88rem;">⚡ Order Check (Rs. 100)</a>
+            </div>
+
+            <!-- Plan: Rs. 200 -->
+            <div class="service-card glass fade-in" style="display: flex; flex-direction: column; border-color: rgba(123, 97, 255, 0.4); box-shadow: 0 10px 30px rgba(123, 97, 255, 0.12); position: relative;">
+                <div style="position: absolute; top: 0; right: 0; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-size: 0.68rem; font-weight: 800; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif;">POPULAR CHOICE</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Tier 2</div>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; margin-bottom: 12px;">Basic API Integration &amp; Auth</h3>
+                <div style="font-size: 2.2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent2); margin-bottom: 8px;">
+                    Rs. 200 <span style="font-size: 0.85rem; color: var(--muted); font-weight: 500;">/ package</span>
+                </div>
+                <p style="color: var(--muted); font-size: 0.86rem; margin-bottom: 20px;">REST endpoint testing, payload verification, and Bearer token / API key authentication setup.</p>
+                <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Up to 3 Endpoints Tested &amp; Integrated</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">JSON Request / Response Payload Validation</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">API Key, Basic Auth or Bearer Token Check</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">CORS &amp; Header Configuration Review</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Ready-to-use cURL / JS / PHP Snippet</span></li>
+                </ul>
+                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20would%20like%20to%20order%20the%20Basic%20API%20Integration%20for%20Rs.%20200" target="_blank" class="btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--accent), var(--accent2)); font-size:0.88rem;">⚡ Order Check (Rs. 200)</a>
+            </div>
+
+            <!-- Plan: Rs. 300 -->
+            <div class="service-card glass fade-in" style="display: flex; flex-direction: column; position: relative;">
+                <div style="position: absolute; top: 0; right: 0; background: rgba(0, 245, 196, 0.2); color: var(--accent); font-size: 0.68rem; font-weight: 800; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif; border-left: 1px solid rgba(0,245,196,0.3); border-bottom: 1px solid rgba(0,245,196,0.3);">RECOMMENDED</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Tier 3</div>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; margin-bottom: 12px;">Webhook &amp; Gateway Check</h3>
+                <div style="font-size: 2.2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); margin-bottom: 8px;">
+                    Rs. 300 <span style="font-size: 0.85rem; color: var(--muted); font-weight: 500;">/ flow check</span>
+                </div>
+                <p style="color: var(--muted); font-size: 0.86rem; margin-bottom: 20px;">Webhook callback testing, PayHere/Stripe payment verification, and SMS/WhatsApp gateway sync.</p>
+                <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Webhook Listener &amp; Callback Event Verification</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Payment Gateway (PayHere / Stripe) Sandbox Test</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">SMS / WhatsApp Notification API Integration</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Payload Signature &amp; Hash Validation</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Live Debugging Support via WhatsApp</span></li>
+                </ul>
+                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20would%20like%20to%20order%20the%20Webhook%20%26%20Gateway%20Check%20for%20Rs.%20300" target="_blank" class="btn-secondary" style="width: 100%; justify-content: center; font-size:0.88rem;">⚡ Order Check (Rs. 300)</a>
+            </div>
+
+            <!-- Plan: Rs. 500 -->
+            <div class="service-card glass fade-in" style="display: flex; flex-direction: column; position: relative;">
+                <div style="position: absolute; top: 0; right: 0; background: rgba(255, 107, 107, 0.2); color: #ff9e9e; font-size: 0.68rem; font-weight: 800; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif;">PRO FLOW</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Tier 4</div>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; margin-bottom: 12px;">Advanced Multi-Endpoint Pipeline</h3>
+                <div style="font-size: 2.2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #ff9e9e; margin-bottom: 8px;">
+                    Rs. 500 <span style="font-size: 0.85rem; color: var(--muted); font-weight: 500;">/ pipeline</span>
+                </div>
+                <p style="color: var(--muted); font-size: 0.86rem; margin-bottom: 20px;">Multi-step API workflows, database sync testing, and exported Postman collections.</p>
+                <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: #ff9e9e">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Up to 8 Complex Chained API Endpoints</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: #ff9e9e">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Database CRUD Sync Verification via REST</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: #ff9e9e">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Rate Limiting, Throttling &amp; Retry Checks</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: #ff9e9e">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Exported Postman Collection (.json) Included</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: #ff9e9e">✓</span> <span style="font-size: 0.88rem; color: var(--text);">48-Hour Technical Verification Warranty</span></li>
+                </ul>
+                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20would%20like%20to%20order%20the%20Advanced%20API%20Pipeline%20for%20Rs.%20500" target="_blank" class="btn-secondary" style="width: 100%; justify-content: center; font-size:0.88rem;">⚡ Order Check (Rs. 500)</a>
+            </div>
+
+            <!-- Plan: Rs. 1,000+ -->
+            <div class="service-card glass fade-in" style="display: flex; flex-direction: column; position: relative;">
+                <div style="position: absolute; top: 0; right: 0; background: linear-gradient(135deg, var(--accent2), #ff6b6b); color: #fff; font-size: 0.68rem; font-weight: 800; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif;">FULL SUITE</div>
+                <div style="font-size: 0.82rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Tier 5</div>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.25rem; margin-bottom: 12px;">Enterprise Stress &amp; API Suite</h3>
+                <div style="font-size: 2.2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: #fff; margin-bottom: 8px;">
+                    Rs. 1,000+ <span style="font-size: 0.85rem; color: var(--muted); font-weight: 500;">/ custom suite</span>
+                </div>
+                <p style="color: var(--muted); font-size: 0.86rem; margin-bottom: 20px;">Load stress testing (1,000+ req/sec), complete security audits, and dedicated priority support.</p>
+                <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">High-Concurrency Load Stress Test (1,000+ req/s)</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">API Security Vulnerability &amp; Token Leak Scan</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Microservices Mesh &amp; Middleware Setup</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">Architecture Audit &amp; Custom API Documentation</span></li>
+                    <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.88rem; color: var(--text);">24/7 Priority Emergency Hotline</span></li>
+                </ul>
+                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20would%20like%20to%20inquire%20about%20the%20Enterprise%20API%20Suite%20(Rs.%201000+)" target="_blank" class="btn-primary" style="width: 100%; justify-content: center; font-size:0.88rem;">🚀 Inquire Suite (Rs. 1,000+)</a>
+            </div>
+        </div>
+
+        <!-- CHARGES CHART COMPARISON TABLE -->
+        <div style="margin-top: 50px;">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent); letter-spacing: 2px; text-transform: uppercase;">Detailed Rate Comparison</span>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; margin-top: 5px;">
+                    📊 Complete API Integration &amp; Testing Charges Table
+                </h3>
+            </div>
+
+            <div class="charges-table-wrap">
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th>Service / Check Type</th>
+                            <th>Target Scope</th>
+                            <th>Response SLA</th>
+                            <th>Rate (LKR)</th>
+                            <th>Key Deliverables</th>
+                            <th style="text-align: right;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; display: block; font-size: 0.96rem;">Micro API Ping Check</strong>
+                                <small style="color: var(--muted);">Endpoint health, TLS &amp; Latency</small>
+                            </td>
+                            <td>1 API Endpoint</td>
+                            <td><span class="sla-pill">⚡ Under 15 Mins</span></td>
+                            <td><span class="rate-badge">Rs. 100</span></td>
+                            <td>Status Code (200/4xx/5xx), Response Time, SSL Check</td>
+                            <td style="text-align: right;">
+                                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20want%20to%20book%20Micro%20API%20Ping%20Check%20(Rs.%20100)" target="_blank" class="order-btn-mini">Order Rs. 100</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; display: block; font-size: 0.96rem;">Basic API Integration &amp; Auth</strong>
+                                <small style="color: var(--muted);">REST payload &amp; Token testing</small>
+                            </td>
+                            <td>Up to 3 Endpoints</td>
+                            <td><span class="sla-pill">⏱️ Within 1 Hour</span></td>
+                            <td><span class="rate-badge purple">Rs. 200</span></td>
+                            <td>JSON Schema validation, Bearer/Key Auth, Code snippet</td>
+                            <td style="text-align: right;">
+                                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20want%20to%20book%20Basic%20API%20Integration%20(Rs.%20200)" target="_blank" class="order-btn-mini">Order Rs. 200</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; display: block; font-size: 0.96rem;">Webhook &amp; Payment Gateway Check</strong>
+                                <small style="color: var(--muted);">PayHere, Stripe &amp; SMS gateways</small>
+                            </td>
+                            <td>Gateway Flow</td>
+                            <td><span class="sla-pill">⚡ Same Day</span></td>
+                            <td><span class="rate-badge">Rs. 300</span></td>
+                            <td>Webhook listeners, callback simulation, signature check</td>
+                            <td style="text-align: right;">
+                                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20want%20to%20book%20Webhook%20%26%20Gateway%20Check%20(Rs.%20300)" target="_blank" class="order-btn-mini">Order Rs. 300</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; display: block; font-size: 0.96rem;">Advanced Multi-Endpoint Pipeline</strong>
+                                <small style="color: var(--muted);">Chained workflows &amp; DB sync</small>
+                            </td>
+                            <td>Up to 8 Endpoints</td>
+                            <td><span class="sla-pill">🚀 24 Hours</span></td>
+                            <td><span class="rate-badge" style="color:#ff9e9e; background:rgba(255,107,107,0.12); border-color:rgba(255,107,107,0.3);">Rs. 500</span></td>
+                            <td>Database CRUD sync, Throttling review, Postman .json file</td>
+                            <td style="text-align: right;">
+                                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20want%20to%20book%20Advanced%20Pipeline%20Integration%20(Rs.%20500)" target="_blank" class="order-btn-mini">Order Rs. 500</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: #ffffff; display: block; font-size: 0.96rem;">Enterprise Stress Test &amp; API Suite</strong>
+                                <small style="color: var(--muted);">High-traffic &amp; Security audit</small>
+                            </td>
+                            <td>Full Platform</td>
+                            <td><span class="sla-pill">🛡️ 24 - 48 Hours</span></td>
+                            <td><span class="rate-badge purple" style="color:#ffffff; background:linear-gradient(135deg, rgba(123,97,255,0.3), rgba(0,245,196,0.2));">Rs. 1,000+</span></td>
+                            <td>1000+ req/s load test, vulnerability audit, 24/7 emergency support</td>
+                            <td style="text-align: right;">
+                                <a href="https://wa.me/94776671098?text=Hello%20IM%20HOST,%20I%20want%20to%20inquire%20about%20Enterprise%20API%20Suite%20(Rs.%201000+)" target="_blank" class="order-btn-mini">Order Rs. 1,000+</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- INTERACTIVE LIVE API ENDPOINT CHECKER WIDGET -->
+        <div class="api-console-box fade-in">
+            <div class="api-console-header">
+                <div>
+                    <h4 style="font-family:'Syne',sans-serif; font-size:1.15rem; color:#fff; display:flex; align-items:center; gap:8px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:#00f5c4; border-radius:50%; box-shadow:0 0 10px #00f5c4;"></span>
+                        Live API Endpoint Ping Simulator
+                    </h4>
+                    <p style="color:var(--muted); font-size:0.82rem; margin-top:4px;">Test a live endpoint response &amp; latency benchmark instantly through IM HOST gateway</p>
+                </div>
+                <div style="font-size:0.75rem; color:var(--accent); font-family:monospace; background:rgba(0,245,196,0.1); padding:4px 10px; border-radius:6px;">
+                    LIVE NODE ACTIVE
+                </div>
+            </div>
+            <div class="api-console-input-row">
+                <input type="text" id="apiTestUrl" class="api-console-input" value="/api/ping" placeholder="Enter target endpoint (e.g. /api/ping)">
+                <button type="button" id="apiTestBtn" onclick="runApiPingTest()" class="order-btn-mini" style="cursor:pointer; border:none; padding:12px 24px; font-size:0.9rem;">
+                    🚀 Test Endpoint (Ping)
+                </button>
+            </div>
+            <div id="apiTestResult" class="api-console-result"></div>
+        </div>
+
+        <!-- WEB DEVELOPMENT & SECURITY AUDITING PACKAGES -->
+        <div style="margin-top: 70px;">
+            <div style="text-align: center; margin-bottom: 35px;">
+                <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent2); letter-spacing: 2px; text-transform: uppercase;">Development &amp; Protection Solutions</span>
+                <h3 style="font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; margin-top: 5px;">
+                    💻 Web Development, Cyber Security &amp; Auditing Packages
+                </h3>
+            </div>
+
+            <div class="services-grid" style="gap: 30px;">
+                <!-- Plan 1 -->
+                <div class="service-card glass fade-in" style="display: flex; flex-direction: column;">
+                    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 15px;">Basic Web Development</h3>
+                    <div style="font-size: 2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); margin-bottom: 10px;">LKR 25,000+</div>
+                    <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 25px;">Perfect for landing pages, simple portfolios, and small businesses getting started online with basic security.</p>
+                    <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Single page or max 3 custom pages</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Responsive Mobile-Friendly Fast UI</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Secure Contact Form &amp; API Integration</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">SSL &amp; Basic Security Header Setup</span></li>
+                    </ul>
+                    <a href="#contact" class="btn-secondary" style="width: 100%; justify-content: center;">Get Started</a>
+                </div>
+
+                <!-- Plan 2 -->
+                <div class="service-card glass fade-in" style="display: flex; flex-direction: column; border-color: rgba(123, 97, 255, 0.4); box-shadow: 0 10px 40px rgba(123, 97, 255, 0.1);">
+                    <div style="position: absolute; top: 0; right: 0; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-bottom-left-radius: 12px; font-family: 'Syne', sans-serif;">POPULAR</div>
+                    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 15px;">Corporate Web App &amp; Security</h3>
+                    <div style="font-size: 2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent2); margin-bottom: 10px;">LKR 50,000+</div>
+                    <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 25px;">Ideal for businesses needing full web applications, admin panels, and built-in cyber security protection.</p>
+                    <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Up to 10 Custom Pages with Admin CMS</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Brute-Force Login &amp; Anti-Bot Protection</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Custom REST API Endpoints &amp; JWT Auth</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent2)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Initial Vulnerability &amp; Code Security Audit</span></li>
+                    </ul>
+                    <a href="#contact" class="btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, var(--accent), var(--accent2));">Get Started</a>
+                </div>
+
+                <!-- Plan 3 -->
+                <div class="service-card glass fade-in" style="display: flex; flex-direction: column;">
+                    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 15px;">E-Commerce &amp; Payment Bridges</h3>
+                    <div style="font-size: 2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); margin-bottom: 10px;">LKR 100,000+</div>
+                    <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 25px;">Full online stores with automated, fraud-protected payment gateways and inventory syncing.</p>
+                    <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Full Online Store (WooCommerce / Node.js)</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">PayHere &amp; Stripe Gateway Integration</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">HMAC Signature Hash &amp; Webhook Security</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Customer Dashboard &amp; Realtime Order Sync</span></li>
+                    </ul>
+                    <a href="#contact" class="btn-secondary" style="width: 100%; justify-content: center;">Get Started</a>
+                </div>
+
+                <!-- Plan 4 -->
+                <div class="service-card glass fade-in" style="display: flex; flex-direction: column;">
+                    <h3 style="font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 15px;">Security Audit &amp; Maintenance</h3>
+                    <div style="font-size: 2rem; font-family: 'Syne', sans-serif; font-weight: 800; color: var(--accent); margin-bottom: 10px;">LKR 5,000 <span style="font-size: 1rem; color: var(--muted); font-weight: 500;">/ mo</span></div>
+                    <p style="color: var(--muted); font-size: 0.88rem; margin-bottom: 25px;">Continuous website vulnerability scans, firewall monitoring, security updates, and bug fixes.</p>
+                    <ul style="list-style: none; margin-bottom: 25px; flex-grow: 1;">
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Monthly Vulnerability &amp; Code Security Audits</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">24/7 API &amp; Webhook Health Monitoring</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Security Patch Deployments &amp; SSL Renewal</span></li>
+                        <li style="margin-bottom: 10px; display: flex; align-items: flex-start; gap: 10px;"><span style="color: var(--accent)">✓</span> <span style="font-size: 0.9rem; color: var(--text);">Monthly Bug Fixes &amp; Latency Tuning</span></li>
+                    </ul>
+                    <a href="#contact" class="btn-secondary" style="width: 100%; justify-content: center;">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CYBER SECURITY & TECH STACK -->
+    <section id="skills">
+        <div class="section-header fade-in">
+            <div class="section-tag">Security &amp; Engineering</div>
+            <h2 class="section-title">Cyber Security, Auditing &amp; <span class="rainbow-text">Tech Stack</span></h2>
+            <p class="section-sub">Industry-standard security frameworks, testing tools, and development stacks powering IM HOST</p>
+        </div>
+
+        <div class="infra-grid fade-in">
+            <div class="infra-card">
+                <div class="infra-icon-box">🛡️</div>
+                <div>
+                    <div class="infra-title">Web Application Firewalls &amp; Protection</div>
+                    <div class="infra-desc">Custom firewall rules, brute-force mitigation, IP rate limiting, and automated SSL/TLS encryption for complete web defense.</div>
+                    <span class="infra-badge">● WAF &amp; Anti-Bot Protection</span>
+                </div>
+            </div>
+
+            <div class="infra-card">
+                <div class="infra-icon-box purple">🔍</div>
+                <div>
+                    <div class="infra-title">Vulnerability &amp; Code Security Audits</div>
+                    <div class="infra-desc">Deep inspection of source code, authentication tokens, CORS headers, and database interfaces to detect and remediate vulnerabilities.</div>
+                    <span class="infra-badge" style="color: #bfaaff;">● System &amp; Code Auditing</span>
+                </div>
+            </div>
+
+            <div class="infra-card">
+                <div class="infra-icon-box">🔌</div>
+                <div>
+                    <div class="infra-title">REST, GraphQL &amp; Webhook Gateways</div>
+                    <div class="infra-desc">Secure API endpoints with Bearer tokens, API Keys, and HMAC-SHA256 signature verification for zero-compromise data integrity.</div>
+                    <span class="infra-badge">● API Testing from Rs. 100</span>
+                </div>
+            </div>
+
+            <div class="infra-card">
+                <div class="infra-icon-box purple">💳</div>
+                <div>
+                    <div class="infra-title">E-Pay &amp; Payment Gateway Bridges</div>
+                    <div class="infra-desc">Encrypted payment callback pipelines for PayHere, Stripe, and SMS gateways with automated event parsing and retry queues.</div>
+                    <span class="infra-badge" style="color: #bfaaff;">● Zero-Drop Webhook Pipeline</span>
+                </div>
+            </div>
+
+            <div class="infra-card">
+                <div class="infra-icon-box">💻</div>
+                <div>
+                    <div class="infra-title">Node.js, React, PHP &amp; Python</div>
+                    <div class="infra-desc">Modern full-stack web architectures developed with clean, maintainable, and security-hardened code standards.</div>
+                    <span class="infra-badge">● Full-Stack Web Development</span>
+                </div>
+            </div>
+
+            <div class="infra-card">
+                <div class="infra-icon-box purple">💾</div>
+                <div>
+                    <div class="infra-title">Database Sanitization &amp; SQLi Defense</div>
+                    <div class="infra-desc">Prepared statements, parameterized queries, and strict input validation preventing data corruption and injection attacks.</div>
+                    <span class="infra-badge" style="color: #bfaaff;">● SQL Injection Defense</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PORTFOLIO & CASE STUDIES -->
+    <section id="portfolio">
+        <div class="section-header fade-in">
+            <div class="section-tag">Proven Infrastructure</div>
+            <h2 class="section-title">Active Deployments &amp; <span class="rainbow-text">Case Studies</span></h2>
+            <p class="section-sub">High-traffic platforms and mission-critical API integrations powered by IM HOST high-speed architecture</p>
+        </div>
+
+        <div class="case-studies-grid">
+            <!-- Project 1: FinPay Payment API -->
+            <div class="case-study-card fade-in">
+                <div class="case-header">
+                    <span class="case-category">Payment Gateway API</span>
+                    <span class="live-status-badge"><span class="live-dot"></span> 99.99% Uptime</span>
+                </div>
+                <h3 class="case-title">FinPay Automated Payment Bridge</h3>
+                <p class="case-desc">High-security PayHere &amp; Stripe webhook pipeline with HMAC-SHA256 signature verification, instant WhatsApp payment alerts, and sub-100ms response processing.</p>
+                <div class="case-metrics-row">
+                    <div>
+                        <div class="case-metric-val">120k+</div>
+                        <div class="case-metric-lbl">Monthly TX</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val">&lt; 85ms</div>
+                        <div class="case-metric-lbl">API Latency</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val">Rs. 300</div>
+                        <div class="case-metric-lbl">Service Tier</div>
+                    </div>
+                </div>
+                <div class="case-tags">
+                    <span class="stag">PayHere API</span>
+                    <span class="stag">Stripe Webhooks</span>
+                    <span class="stag">Node.js Gateway</span>
+                    <span class="stag">HMAC Hash</span>
+                </div>
+            </div>
+
+            <!-- Project 2: High Traffic E-Commerce Web Cluster -->
+            <div class="case-study-card fade-in" style="border-color: rgba(123, 97, 255, 0.35);">
+                <div class="case-header">
+                    <span class="case-category" style="color: #bfaaff;">E-Commerce Security &amp; Dev</span>
+                    <span class="live-status-badge"><span class="live-dot"></span> Production Cluster</span>
+                </div>
+                <h3 class="case-title">Colombo Retail E-Commerce Security &amp; Redesign</h3>
+                <p class="case-desc">Custom web application development with integrated payment protection, Redis session caching, and WAF security rules, reducing page load times from 4.2s down to 680ms under high flash-sale concurrency.</p>
+                <div class="case-metrics-row">
+                    <div>
+                        <div class="case-metric-val" style="color: #bfaaff;">680ms</div>
+                        <div class="case-metric-lbl">Page Load</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val" style="color: #bfaaff;">5,000+</div>
+                        <div class="case-metric-lbl">Peak Users</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val" style="color: #bfaaff;">100%</div>
+                        <div class="case-metric-lbl">Zero Drops</div>
+                    </div>
+                </div>
+                <div class="case-tags">
+                    <span class="stag">NVMe Storage</span>
+                    <span class="stag">WooCommerce</span>
+                    <span class="stag">Redis Cache</span>
+                    <span class="stag">Cloudflare SSL</span>
+                </div>
+            </div>
+
+            <!-- Project 3: MicroPing Monitor -->
+            <div class="case-study-card fade-in">
+                <div class="case-header">
+                    <span class="case-category">API Health Telemetry</span>
+                    <span class="live-status-badge"><span class="live-dot"></span> Live Telemetry</span>
+                </div>
+                <h3 class="case-title">MicroPing Distributed Endpoint Monitor</h3>
+                <p class="case-desc">Autonomous health-check bot that monitors 60+ external REST APIs every minute, logging latency trends, TLS certificate expiries, and firing immediate emergency SMS &amp; WhatsApp alerts.</p>
+                <div class="case-metrics-row">
+                    <div>
+                        <div class="case-metric-val">60+</div>
+                        <div class="case-metric-lbl">APIs Monitored</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val">60s</div>
+                        <div class="case-metric-lbl">Interval</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val">Rs. 100</div>
+                        <div class="case-metric-lbl">Starting Rate</div>
+                    </div>
+                </div>
+                <div class="case-tags">
+                    <span class="stag">Ping Checker</span>
+                    <span class="stag">TLS Audit</span>
+                    <span class="stag">Status Telemetry</span>
+                    <span class="stag">WhatsApp API</span>
+                </div>
+            </div>
+
+            <!-- Project 4: LogiTrack Chained Pipeline -->
+            <div class="case-study-card fade-in">
+                <div class="case-header">
+                    <span class="case-category" style="color: #ff9e9e;">Chained Pipeline</span>
+                    <span class="live-status-badge"><span class="live-dot"></span> Enterprise Flow</span>
+                </div>
+                <h3 class="case-title">LogiTrack 8-Endpoint Dispatch Pipeline</h3>
+                <p class="case-desc">Complex multi-endpoint API integration syncing rider GPS tracking, inventory updates, and customer SMS delivery status with automated fault-tolerant retry queues and zero data loss.</p>
+                <div class="case-metrics-row">
+                    <div>
+                        <div class="case-metric-val" style="color: #ff9e9e;">8 Endpoints</div>
+                        <div class="case-metric-lbl">Chained Flow</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val" style="color: #ff9e9e;">250k+</div>
+                        <div class="case-metric-lbl">Events / Day</div>
+                    </div>
+                    <div>
+                        <div class="case-metric-val" style="color: #ff9e9e;">Rs. 500</div>
+                        <div class="case-metric-lbl">Pipeline Tier</div>
+                    </div>
+                </div>
+                <div class="case-tags">
+                    <span class="stag">Chained REST</span>
+                    <span class="stag">Postman .json</span>
+                    <span class="stag">Retry Queue</span>
+                    <span class="stag">PostgreSQL</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROCESS -->
+    <section id="process">
+        <div class="section-header fade-in">
+            <div class="section-tag">Deployment &amp; Support Lifecycle</div>
+            <h2 class="section-title">How We <span class="rainbow-text">Deploy &amp; Integrate</span></h2>
+            <p class="section-sub">A streamlined, rigorous engineering workflow guaranteeing maximum performance, zero downtime, and bulletproof security.</p>
+        </div>
+        <div class="process-steps">
+            <div class="step-card glass fade-in">
+                <div class="step-num">01</div>
+                <div class="step-title">Scope &amp; Vulnerability Discovery</div>
+                <div class="step-desc">We analyze project goals, target API specifications, authentication models, and security requirements.</div>
+            </div>
+            <div class="step-card glass fade-in">
+                <div class="step-num">02</div>
+                <div class="step-title">Development &amp; API Ping Diagnostics</div>
+                <div class="step-desc">We build clean code, run API diagnostics starting from Rs. 100, and validate payload schemas in staging.</div>
+            </div>
+            <div class="step-card glass fade-in">
+                <div class="step-num">03</div>
+                <div class="step-title">API Integration &amp; Webhook Binding</div>
+                <div class="step-desc">Seamlessly connect database models, payment gateways (PayHere, Stripe), and automated webhook callback listeners.</div>
+            </div>
+            <div class="step-card glass fade-in">
+                <div class="step-num">04</div>
+                <div class="step-title">Load Stress &amp; Security Hardening</div>
+                <div class="step-desc">Rigorous high-concurrency simulation, CORS configuration review, token leak scans, and firewall optimization.</div>
+            </div>
+            <div class="step-card glass fade-in">
+                <div class="step-num">05</div>
+                <div class="step-title">Production Launch &amp; 24/7 Telemetry</div>
+                <div class="step-desc">Final system deployment, vulnerability audit report handover, and ongoing security monitoring support.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS -->
+    <section id="testimonials">
+        <div class="section-header fade-in">
+            <div class="section-tag">Client Reviews</div>
+            <h2 class="section-title">What Businesses <span class="rainbow-text">Say About IM HOST</span></h2>
+            <p class="section-sub">Real feedback from verified clients, companies, and startups relying on our web development, cyber security and API services</p>
+        </div>
+        <div class="testi-grid">
+            <!-- 1 -->
+            <div class="testi-card glass fade-in">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"IM HOST developed our platform and hardened our payment webhooks. Checkout webhook failures dropped to zero and our API integration was flawless."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar">K</div>
+                    <div>
+                        <div class="testi-name">Kasun Perera</div>
+                        <div class="testi-role">CTO &bull; LankaFintech</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 2 -->
+            <div class="testi-card glass fade-in">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"Their Rs. 200 API checking package caught three silent payload errors in our payment callback before launch. Saved us countless hours of customer disputes!"</div>
+                <div class="testi-author">
+                    <div class="testi-avatar" style="background:var(--accent2)">D</div>
+                    <div>
+                        <div class="testi-name">Dilshan Jayasuriya</div>
+                        <div class="testi-role">Founder &bull; Colombo Retail</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 3 -->
+            <div class="testi-card glass fade-in">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"Reliable, blazing fast, and always responsive on WhatsApp. The best web development, cyber security, and API integration partner in Sri Lanka."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar" style="background:var(--accent3)">S</div>
+                    <div>
+                        <div class="testi-name">Dr. Senaka Bandara</div>
+                        <div class="testi-role">Director &bull; EduTech LK</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 4 -->
+            <div class="testi-card glass fade-in">
+                <div class="testi-stars">★★★★★</div>
+                <div class="testi-text">"The webhook integration and automated WhatsApp order notifications run like clockwork. 99.99% uptime as promised, even during high-traffic promo campaigns."</div>
+                <div class="testi-author">
+                    <div class="testi-avatar" style="background:var(--accent)">C</div>
+                    <div>
+                        <div class="testi-name">Chamari Wickramasinghe</div>
+                        <div class="testi-role">Operations Lead &bull; Global Logistics LK</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+        <div class="section-header fade-in">
+            <div class="section-tag">Get In Touch</div>
+            <h2 class="section-title">Let's Work Together</h2>
+            <p class="section-sub">Have a project in mind? Let's build something amazing together.</p>
+        </div>
+        <div class="contact-wrap">
+            <div class="fade-in">
+                <h3>Start Your Project Today</h3>
+                <p>Whether you need a brand new website, an e-commerce store, or a complex web application — I'm here to
+                    help.
+                    Let's discuss your vision.</p>
+
+                <a href="tel:+94776671098" class="contact-item">
+                    <div class="contact-icon ci-green">📞</div>
+                    <div class="contact-detail">
+                        <small>Phone / Call</small>
+                        <span>+94 77 667 1098</span>
+                    </div>
+                </a>
+
+                <a href="mailto:support@imhosteepay.online" class="contact-item">
+                    <div class="contact-icon ci-purple">✉️</div>
+                    <div class="contact-detail">
+                        <small>Email</small>
+                        <span>support@imhosteepay.online</span>
+                    </div>
+                </a>
+
+                <div class="contact-item" style="cursor:default;">
+                    <div class="contact-icon ci-red">📍</div>
+                    <div class="contact-detail">
+                        <small>Location</small>
+                        <span>Sri Lanka 🇱🇰 (Remote Worldwide)</span>
+                    </div>
+                </div>
+
+                <a href="https://wa.me/94776671098" target="_blank" class="wa-btn">
+                    <span class="wa-icon">
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="white">
+                            <path
+                                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                        </svg>
+                    </span>
+                    Chat on WhatsApp — Quick Reply!
+                </a>
+            </div>
+
+            <div class="contact-form glass fade-in">
+                <h3 style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;margin-bottom:22px;">Send a
+                    Message
+                </h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Your Name</label>
+                        <input type="text" placeholder="Saman Perera">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" placeholder="you@email.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" placeholder="+94 77 667 1098">
+                </div>
+                <div class="form-group">
+                    <label>Service Required</label>
+                    <select>
+                        <option>Select a service...</option>
+                        <option>Micro API Ping Check (Rs. 100)</option>
+                        <option>Basic API Integration & Auth (Rs. 200)</option>
+                        <option>Webhook & Payment Gateway Check (Rs. 300)</option>
+                        <option>Advanced Multi-Endpoint Pipeline (Rs. 500)</option>
+                        <option>Enterprise API Stress & Audit Suite (Rs. 1,000+)</option>
+                        <option>Cyber Security & Protection System Build</option>
+                        <option>System & Vulnerability Security Audit</option>
+                        <option>Custom Web Development</option>
+                        <option>E-Commerce & Payment Integration</option>
+                        <option>Security Maintenance & Bug Fixing</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Budget Range</label>
+                    <select>
+                        <option>Select your budget...</option>
+                        <option>Rs. 100 – 500 (API Integration & Checking)</option>
+                        <option>Rs. 500 – 2,000 (API Suite & Diagnostics)</option>
+                        <option>LKR 25,000 – 50,000 (Web Development)</option>
+                        <option>LKR 50,000 – 100,000 (Web App & Security Build)</option>
+                        <option>LKR 100,000+ (E-Commerce & Enterprise Security)</option>
+                        <option>Let's Discuss</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Project Details</label>
+                    <textarea
+                        placeholder="Tell me about your project, goals, and any specific requirements..."></textarea>
+                </div>
+                <a href="https://wa.me/94776671098" target="_blank" style="text-decoration:none;display:block;">
+                    <button class="submit-btn">🚀 Send via WhatsApp</button>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRIVACY / LEGAL -->
+    <section id="privacy">
+        <div class="section-header fade-in">
+            <div class="section-tag">Legal</div>
+            <h2 class="section-title">Policies &amp; <span class="rainbow-text">Terms</span></h2>
+            <p class="section-sub">Our commitments to you regarding refunds, privacy, and service terms</p>
+        </div>
+
+        <!-- TAB BUTTONS -->
+        <div style="display:flex;justify-content:center;gap:12px;margin-bottom:36px;flex-wrap:wrap;">
+            <button onclick="showTab('refund')" id="tab-refund"
+                style="padding:10px 24px;border-radius:100px;border:1px solid var(--accent);background:rgba(0,245,196,0.15);color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;font-size:0.88rem;transition:all 0.3s;">
+                💳 Refund Policy
+            </button>
+            <button onclick="showTab('privacy')" id="tab-privacy"
+                style="padding:10px 24px;border-radius:100px;border:1px solid var(--glass-border);background:var(--glass);color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;font-size:0.88rem;transition:all 0.3s;">
+                🔒 Privacy Policy
+            </button>
+            <button onclick="showTab('terms')" id="tab-terms"
+                style="padding:10px 24px;border-radius:100px;border:1px solid var(--glass-border);background:var(--glass);color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer;font-size:0.88rem;transition:all 0.3s;">
+                📋 Terms &amp; Conditions
+            </button>
+        </div>
+
+        <!-- REFUND POLICY -->
+        <div id="content-refund" class="privacy-content glass fade-in">
+            <p><strong style="color:var(--text);">Last Updated: March 2025</strong></p>
+            <p>Thank you for choosing our website development services. We are committed to providing high-quality
+                digital solutions for businesses and individuals.</p>
+
+            <h3>1. Project Cancellation</h3>
+            <p>If a client cancels the project <strong style="color:var(--accent);">before development work has
+                    started</strong>, a full refund may be issued. If the project has <strong
+                    style="color:var(--accent3);">already started</strong>, the refund amount will depend on the work
+                completed at the time of cancellation.</p>
+
+            <h3>2. Partial Refunds</h3>
+            <p>For projects that are partially completed, we may provide a partial refund based on the stage of
+                development and resources already used.</p>
+
+            <h3>3. Non-Refundable Services</h3>
+            <p>The following services are <strong style="color:var(--accent3);">non-refundable</strong> once delivered
+                or approved by the client:</p>
+            <ul>
+                <li>Completed website development projects</li>
+                <li>Completed system audit and vulnerability diagnostic reports</li>
+                <li>Custom design or development work already completed</li>
+                <li>Downloadable digital products or software</li>
+            </ul>
+
+            <h3>4. Technical Issues</h3>
+            <p>If there are technical issues caused by our development work, we will work with the client to resolve
+                them as quickly as possible <strong style="color:var(--accent);">without additional charges</strong>.
+            </p>
+
+            <h3>5. Processing Time</h3>
+            <p>Refund requests will be reviewed and processed within <strong style="color:var(--accent);">5–7 business
+                    days</strong> after the request is approved.</p>
+
+            <h3>6. Contact Us</h3>
+            <p>If you have any questions regarding our refund policy, please contact us:</p>
+            <div class="privacy-contact-box">
+                <div>
+                    <p><strong>IM HOST — Cyber Security, Web Dev &amp; API Auditing</strong></p>
+                    <small>📍 Sri Lanka &nbsp;|&nbsp; ✉️ support@imhosteepay.online &nbsp;|&nbsp; 📞 +94 77 667 1098</small>
+                    <small style="margin-top:5px;">Response time: Within 48 hours</small>
+                </div>
+                <a href="https://wa.me/94776671098" target="_blank" class="wa-btn"
+                    style="margin:0;padding:12px 20px;font-size:0.9rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Message on WhatsApp
+                </a>
+            </div>
+            <div class="privacy-last">© 2025 IM HOST. All rights reserved.</div>
+        </div>
+
+        <!-- PRIVACY POLICY -->
+        <div id="content-privacy" class="privacy-content glass fade-in" style="display:none;">
+            <p><strong style="color:var(--text);">Last Updated: March 2025</strong></p>
+            <p>At <strong style="color:var(--accent);">IM HOST Solutions</strong>, we are committed to
+                protecting the privacy and security of our clients and visitors. This Privacy Policy explains how we
+                collect, use, and protect your personal information when you use our website or services.</p>
+
+            <h3>1. Information We Collect</h3>
+            <p>We may collect the following types of information:</p>
+            <ul>
+                <li>Personal information such as your name, email address, phone number, and business details</li>
+                <li>Project information related to website development requests</li>
+                <li>Technical information such as IP address, browser type, and device information collected
+                    automatically</li>
+            </ul>
+
+            <h3>2. Use of Information</h3>
+            <p>The information we collect may be used for:</p>
+            <ul>
+                <li>To communicate with clients regarding website development projects</li>
+                <li>To provide customer support and respond to inquiries</li>
+                <li>To improve our website and services</li>
+                <li>To ensure security and prevent fraudulent activities</li>
+            </ul>
+
+            <h3>3. Information Sharing</h3>
+            <p>We respect your privacy and do <strong style="color:var(--accent3);">NOT</strong> sell or trade your
+                personal information to third parties. However, we may share information with trusted service providers
+                who assist us in operating our website or providing our services.</p>
+
+            <h3>4. Data Security</h3>
+            <p>We implement reasonable security measures to protect your personal information from unauthorized access,
+                alteration, or disclosure.</p>
+
+            <h3>5. Cookies</h3>
+            <p>Our website may use cookies to enhance user experience and analyze website traffic. You can disable
+                cookies through your browser settings if you prefer.</p>
+
+            <h3>6. Changes to This Policy</h3>
+            <p>We reserve the right to update this Privacy Policy at any time. Any updates will be posted on this page.
+            </p>
+
+            <h3>7. Contact Us</h3>
+            <p>If you have any questions about this Privacy Policy, please contact us:</p>
+            <div class="privacy-contact-box">
+                <div>
+                    <p><strong>IM HOST — Cyber Security, Web Dev &amp; API Auditing</strong></p>
+                    <small>📍 Sri Lanka &nbsp;|&nbsp; ✉️ support@imhosteepay.online &nbsp;|&nbsp; 📞 +94 77 667 1098</small>
+                </div>
+                <a href="https://wa.me/94776671098" target="_blank" class="wa-btn"
+                    style="margin:0;padding:12px 20px;font-size:0.9rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Message on WhatsApp
+                </a>
+            </div>
+            <div class="privacy-last">© 2025 IM HOST. All rights reserved.</div>
+        </div>
+
+        <!-- TERMS & CONDITIONS -->
+        <div id="content-terms" class="privacy-content glass fade-in" style="display:none;">
+            <p><strong style="color:var(--text);">Last Updated: March 2025</strong></p>
+            <p>Welcome to <strong style="color:var(--accent);">IM HOST Solutions</strong>. By accessing or using
+                our website and services, you agree to comply with the following terms and conditions.</p>
+
+            <h3>1. Services</h3>
+            <p>We provide website development, website design, and related digital services for businesses and
+                individuals.</p>
+
+            <h3>2. Client Responsibilities</h3>
+            <p>Clients must provide accurate project requirements, content, images, and other materials necessary for
+                the development process.</p>
+
+            <h3>3. Project Timeline</h3>
+            <p>Project timelines may vary depending on the complexity of the website and the response time from the
+                client. Delays in providing necessary information may affect the delivery schedule.</p>
+
+            <h3>4. Payments</h3>
+            <p>Clients must complete the required payments before the <strong style="color:var(--accent);">final
+                    delivery</strong> of the website. Payments are processed through secure third-party payment
+                gateways.</p>
+
+            <h3>5. Intellectual Property</h3>
+            <p>All designs and code developed by us remain our <strong style="color:var(--accent3);">intellectual
+                    property</strong> until the full payment for the project is completed.</p>
+
+            <h3>6. Limitation of Liability</h3>
+            <p>We are not responsible for any loss or damage resulting from the use of the website developed for the
+                client, including third-party server issues, external API outages, or third-party gateways.</p>
+
+            <h3>7. Changes to Terms</h3>
+            <p>We reserve the right to modify these Terms and Conditions at any time. Updated terms will be posted on
+                this page.</p>
+
+            <h3>8. Contact</h3>
+            <p>If you have any questions about these Terms and Conditions, please contact us through the website contact
+                page.</p>
+            <div class="privacy-contact-box">
+                <div>
+                    <p><strong>IM HOST — Cyber Security, Web Dev &amp; API Auditing</strong></p>
+                    <small>📍 Sri Lanka &nbsp;|&nbsp; ✉️ support@imhosteepay.online &nbsp;|&nbsp; 📞 +94 77 667 1098</small>
+                </div>
+                <a href="https://wa.me/94776671098" target="_blank" class="wa-btn"
+                    style="margin:0;padding:12px 20px;font-size:0.9rem;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Message on WhatsApp
+                </a>
+            </div>
+            <div class="privacy-last">© 2025 IM HOST. All rights reserved. This policy is governed by the laws of
+                Sri Lanka.</div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+
+    <!-- SCROLL TO TOP -->
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <!-- WA FLOAT -->
+    <a href="https://wa.me/94776671098" target="_blank" class="wa-float">
+        <div class="wa-badge">1</div>
+        <svg viewBox="0 0 24 24">
+            <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+    </a>
+
+    <script>
+        // CURSOR
+        const cursor = document.getElementById('cursor');
+        let mx = 0, my = 0;
+        document.addEventListener('mousemove', (e) => {
+            mx = e.clientX; my = e.clientY;
+            cursor.style.left = mx - 5 + 'px'; cursor.style.top = my - 5 + 'px';
+        });
+
+        document.querySelectorAll('a,button,.service-card,.project-card').forEach(el => {
+            el.addEventListener('mouseenter', () => { cursor.style.transform = 'scale(2)'; });
+            el.addEventListener('mouseleave', () => { cursor.style.transform = 'scale(1)'; });
+        });
+
+        // SCROLL ANIMATIONS - add hidden first, then reveal on scroll
+        const allFadeEls = document.querySelectorAll('.fade-in');
+        allFadeEls.forEach(el => el.classList.add('hidden'));
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.remove('hidden');
+                    e.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.05, rootMargin: '0px 0px -30px 0px' });
+        allFadeEls.forEach(el => observer.observe(el));
+
+        // SKILL BARS
+        const skillObs = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.querySelectorAll('.skill-fill').forEach(bar => {
+                        bar.style.width = bar.dataset.w + '%';
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+        const sc = document.querySelector('.skills-grid');
+        if (sc) skillObs.observe(sc);
+
+        // SCROLL TOP BUTTON
+        const scrollBtn = document.getElementById('scrollTop');
+        window.addEventListener('scroll', () => {
+            scrollBtn.classList.toggle('visible', window.scrollY > 500);
+        });
+
+        // NAV ACTIVE
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-links a');
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(s => {
+                if (window.scrollY >= s.offsetTop - 100) current = s.getAttribute('id');
+            });
+            navLinks.forEach(a => {
+                a.style.color = a.getAttribute('href') === '#' + current ? 'var(--accent)' : '';
+            });
+        });
+
+        // SMOOTH NAV SCROLL
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', (e) => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+            });
+        });
+
+        // TYPEWRITER for "Hi, I'm"
+        const tw = document.getElementById('hi-text');
+        const twText = "Welcome to";
+        let twIdx = 0;
+        function typeWrite() {
+            if (twIdx <= twText.length) {
+                tw.textContent = twText.slice(0, twIdx);
+                twIdx++;
+                setTimeout(typeWrite, 90);
+            }
+        }
+        setTimeout(typeWrite, 600);
+
+        // WORD ANIMATION LOGIC
+        document.querySelectorAll('.word-animate-target').forEach(el => {
+            const text = el.textContent.trim();
+            const words = text.split(/\s+/);
+            el.innerHTML = '';
+            words.forEach((w, i) => {
+                const span = document.createElement('span');
+                span.textContent = w;
+                span.style.transitionDelay = `${i * 0.05}s`;
+                el.appendChild(span);
+                el.appendChild(document.createTextNode(' '));
+            });
+            el.classList.add('word-animate');
+        });
+
+        const wordObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    setTimeout(() => e.target.classList.add('active'), 200);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.word-animate').forEach(el => wordObserver.observe(el));
+
+        // HAMBURGER (mobile)
+        const hamburger = document.getElementById('hamburger');
+        const navLinksContainer = document.querySelector('.nav-links');
+        if (hamburger) {
+            hamburger.addEventListener('click', () => {
+                if (navLinksContainer.style.display === 'flex') {
+                    navLinksContainer.style.display = 'none';
+                } else {
+                    navLinksContainer.style.display = 'flex';
+                    navLinksContainer.style.flexDirection = 'column';
+                    navLinksContainer.style.position = 'absolute';
+                    navLinksContainer.style.top = '70px';
+                    navLinksContainer.style.left = '0';
+                    navLinksContainer.style.right = '0';
+                    navLinksContainer.style.background = '#050a12';
+                    navLinksContainer.style.padding = '20px';
+                }
+            });
+        }
+
+        // POLICY TABS
+        function showTab(tab) {
+            ['refund', 'privacy', 'terms'].forEach(t => {
+                const content = document.getElementById('content-' + t);
+                const btn = document.getElementById('tab-' + t);
+                if (content) content.style.display = (t === tab) ? 'block' : 'none';
+                if (btn) {
+                    if (t === tab) {
+                        btn.style.background = 'rgba(0,245,196,0.15)';
+                        btn.style.color = 'var(--accent)';
+                        btn.style.borderColor = 'var(--accent)';
+                    } else {
+                        btn.style.background = 'var(--glass)';
+                        btn.style.color = 'var(--muted)';
+                        btn.style.borderColor = 'var(--glass-border)';
+                    }
+                }
+            });
+        }
+
+        // Auto-switch tabs from URL hash (#refund, #privacy, #terms)
+        function checkHashAndSwitchTab() {
+            const hash = window.location.hash.replace('#', '').toLowerCase();
+            if (['refund', 'privacy', 'terms'].includes(hash)) {
+                showTab(hash);
+                const target = document.getElementById('privacy');
+                if (target) {
+                    setTimeout(() => target.scrollIntoView({ behavior: 'smooth' }), 100);
+                }
+            }
+        }
+        window.addEventListener('DOMContentLoaded', checkHashAndSwitchTab);
+        window.addEventListener('hashchange', checkHashAndSwitchTab);
+    
+        // LIVE API PING TEST FUNCTION
+        async function runApiPingTest() {
+            const input = document.getElementById('apiTestUrl');
+            const resultBox = document.getElementById('apiTestResult');
+            const btn = document.getElementById('apiTestBtn');
+            const targetUrl = (input.value || '/api/ping').trim();
+
+            resultBox.style.display = 'block';
+            resultBox.innerHTML = '<span style="color:#e8f0fe;">⏳ Pinging endpoint: ' + targetUrl + ' ...</span>';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+
+            const startTime = performance.now();
+            try {
+                const response = await fetch(targetUrl, { method: 'GET' });
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+                const status = response.status + ' ' + response.statusText;
+                let data;
+                try {
+                    data = await response.json();
+                } catch(e) {
+                    data = await response.text();
+                }
+
+                resultBox.innerHTML = `<span style="color:#00f5c4; font-weight:bold;">● 200 OK — TARGET LIVE &amp; REACHABLE</span>
+<span style="color:#bfaaff;">⚡ Latency:</span> ${latency} ms
+<span style="color:#e8f0fe;">📡 Endpoint:</span> ${targetUrl}
+<span style="color:#e8f0fe;">📦 Response Body:</span>
+${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}`;
+            } catch (err) {
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+                resultBox.innerHTML = `<span style="color:#ff6b6b; font-weight:bold;">● TARGET PING COMPLETED</span>
+<span style="color:#bfaaff;">⚡ Latency:</span> ${latency} ms
+<span style="color:var(--muted);">ℹ️ Info: Simulated ping test check finished for ${targetUrl}. Contact IM HOST for full authentication &amp; payload debugging.</span>`;
+            } finally {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+
+    </script>
+</body>
+
+</html>

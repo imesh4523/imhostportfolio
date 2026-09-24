@@ -1,0 +1,11 @@
+{
+    "name": "im-host-platform",
+    "version": "1.0.0",
+    "description": "IM HOST - Next-Gen Cloud Hosting & API Integration Platform",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "author": "IM HOST",
+    "license": "MIT"
+}

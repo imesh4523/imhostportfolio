@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" width="320" height="80" fill="none">
+  <defs>
+    <linearGradient id="im-cyan-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f5c4"/>
+      <stop offset="50%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#7b61ff"/>
+    </linearGradient>
+    <linearGradient id="server-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(0, 245, 196, 0.45)"/>
+      <stop offset="100%" stop-color="rgba(0, 245, 196, 0.08)"/>
+    </linearGradient>
+    <linearGradient id="server-grad-2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(123, 97, 255, 0.45)"/>
+      <stop offset="100%" stop-color="rgba(123, 97, 255, 0.08)"/>
+    </linearGradient>
+    <filter id="neon-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Logo Icon Container -->
+  <g transform="translate(10, 8)">
+    <!-- Hexagonal Glow Base -->
+    <polygon points="32,4 60,19 60,51 32,66 4,51 4,19" fill="#080f1a" stroke="url(#im-cyan-purple)" stroke-width="2.5" filter="url(#neon-glow)"/>
+    
+    <!-- Isometric Cloud Server Trays -->
+    <!-- Top Layer -->
+    <polygon points="32,14 49,23 32,32 15,23" fill="url(#server-grad-1)" stroke="#00f5c4" stroke-width="1.6"/>
+    <!-- Middle Layer -->
+    <polygon points="32,25 49,34 32,43 15,34" fill="url(#server-grad-2)" stroke="#7b61ff" stroke-width="1.6"/>
+    <!-- Bottom Layer -->
+    <polygon points="32,36 49,45 32,54 15,45" fill="url(#server-grad-1)" stroke="#00f5c4" stroke-width="1.6"/>
+
+    <!-- Central Signal Pulse LEDs -->
+    <circle cx="32" cy="23" r="2.2" fill="#00f5c4" filter="url(#neon-glow)"/>
+    <circle cx="32" cy="34" r="2.2" fill="#ffffff"/>
+    <circle cx="32" cy="45" r="2.2" fill="#7b61ff" filter="url(#neon-glow)"/>
+
+    <!-- Left & Right Circuit Nodes -->
+    <circle cx="21" cy="20" r="1.6" fill="#00f5c4"/>
+    <circle cx="43" cy="31" r="1.6" fill="#7b61ff"/>
+  </g>
+
+  <!-- Typography: IM HOST -->
+  <g transform="translate(86, 0)">
+    <!-- Main Title -->
+    <text x="0" y="47" font-family="'Syne', 'DM Sans', sans-serif" font-weight="900" font-size="34" letter-spacing="-0.8">
+      <tspan fill="#ffffff">IM</tspan>
+      <tspan dx="8" fill="url(#im-cyan-purple)">HOST</tspan>
+    </text>
+    
+    <!-- Glowing Status Indicator Dot -->
+    <circle cx="160" cy="36" r="4" fill="#00f5c4" filter="url(#neon-glow)"/>
+
+    <!-- Subtitle / Tagline -->
+    <text x="2" y="66" font-family="'DM Sans', sans-serif" font-weight="700" font-size="10.5" fill="rgba(232, 240, 254, 0.7)" letter-spacing="3.8">
+      DEV &bull; SECURITY &bull; API
+    </text>
+  </g>
+</svg>
