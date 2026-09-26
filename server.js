@@ -159,213 +159,53 @@ const server = http.createServer(async (req, res) => {
     // 1. Live API Ping Endpoint
     if (pathname === '/api/ping' || pathname === '/api/check') {
         const startTime = Date.now();
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({
-            status: 'online',
-            service: 'IM HOST API Gateway & Security Node',
-            check_status: 'SUCCESS (200 OK)',
-            response_time_ms: Math.max(1, Date.now() - startTime),
-            port: PORT,
-            timestamp: new Date().toISOString()
-        }, null, 2));
-    }
-
-    // 2. Direct Buy Plan Route (Initiates PayHere from imhost Pricing buttons)
-    if (pathname === '/buy') {
-        const planName = parsedUrl.query.plan || 'API Checking Plan';
-        const rawAmount = parseFloat(parsedUrl.query.amount) || 100;
-        const currency = parsedUrl.query.currency || 'LKR';
-
-        try {
-            let userRes = await pool.query('SELECT id FROM telegram_users LIMIT 1');
-            let userId = userRes.rows[0]?.id || 1;
-
-            const amountInCents = Math.round(rawAmount * 100);
-            const pRes = await pool.query(
-                `INSERT INTO payments (telegram_user_id, amount, currency, status, payment_method, external_id, created_at, updated_at) 
-                 VALUES ($1, $2, $3, 'pending', 'payhere', $4, NOW(), NOW()) RETURNING id`,
-                [userId, amountInCents, currency, `IMHOST_DIR_${Date.now()}`]
-            );
-
-            const paymentId = pRes.rows[0].id;
-            res.writeHead(302, { Location: `/checkout?payment_id=${paymentId}` });
-            return res.end();
-        } catch (err) {
-            console.error('[IM HOST DIRECT BUY] Error:', err.message);
-            res.writeHead(500, { 'Content-Type': 'text/plain' });
-            return res.end('Failed to initialize checkout session: ' + err.message);
-        }
-    }
-
-    // 3. Auth API: Register
-    if (pathname === '/api/auth/register' && req.method === 'POST') {
-        const { name, email, password } = await parseBody(req);
-        if (!name || !email || !password) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: false, message: 'Name, email, and password are required.' }));
-        }
-
-        try {
-            const cleanEmail = email.toLowerCase().trim();
-            const existing = await pool.query('SELECT id FROM host_users WHERE email = $1 LIMIT 1', [cleanEmail]);
-            if (existing.rows.length > 0) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                return res.end(JSON.stringify({ success: false, message: 'An account with this email already exists.' }));
-            }
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-            const insRes = await pool.query(
-                `INSERT INTO host_users (name, email, password, plan, api_credits, created_at, updated_at) 
-                 VALUES ($1, $2, $3, 'Starter Plan', 25, NOW(), NOW()) RETURNING id, name, email, plan, api_credits, created_at`,
-                [name.trim(), cleanEmail, hashedPassword]
-            );
-
-            const user = insRes.rows[0];
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: true, message: 'Registration successful!', user }));
-        } catch (e) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: false, message: e.message }));
-        }
-    }
-
-    // 4. Auth API: Login
-    if (pathname === '/api/auth/login' && req.method === 'POST') {
-        const { email, password } = await parseBody(req);
-        if (!email || !password) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: false, message: 'Email and password are required.' }));
-        }
-
-        try {
-            const cleanEmail = email.toLowerCase().trim();
-            const resUser = await pool.query('SELECT * FROM host_users WHERE email = $1 LIMIT 1', [cleanEmail]);
-            if (resUser.rows.length === 0) {
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                return res.end(JSON.stringify({ success: false, message: 'Invalid email or password.' }));
-            }
-
-            const user = resUser.rows[0];
-            const isValid = await bcrypt.compare(password, user.password);
-            if (!isValid) {
-                res.writeHead(401, { 'Content-Type': 'application/json' });
-                return res.end(JSON.stringify({ success: false, message: 'Invalid email or password.' }));
-            }
-
-            const { password: _, ...safeUser } = user;
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: true, message: 'Login successful!', user: safeUser }));
-        } catch (e) {
-            res.writeHead(500, { 'Content-Type': 'application/json' });
-            return res.end(JSON.stringify({ success: false, message: e.message }));
-        }
-    }
-
-    // 5. User Login & Signup Page UI
-    if (pathname === '/login' || pathname === '/register') {
-        const isRegister = pathname === '/register';
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+                res.writeHead(200, {
+            'Content-Type': 'text/html; charset=UTF-8',
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+        });
         return res.end(`<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IM HOST - Member Authentication</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="referrer" content="origin">
+    <title>Connecting to Secure Gateway...</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: #050a12; color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .auth-card { background: #0d1522; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; max-width: 440px; width: 100%; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        .logo-row { text-align: center; margin-bottom: 25px; }
-        .logo-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 245, 196, 0.1); color: #00f5c4; padding: 6px 16px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(0, 245, 196, 0.2); }
-        .tabs { display: flex; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.06); }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: 700; font-size: 0.9rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-        .tab-btn.active { background: #00f5c4; color: #050a12; box-shadow: 0 4px 12px rgba(0,245,196,0.3); }
-        .input-group { margin-bottom: 16px; text-align: left; }
-        .input-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
-        .input-group input { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; }
-        .input-group input:focus { border-color: #00f5c4; }
-        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #00f5c4, #00c9ff); color: #041019; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-        .msg-box { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; }
-        .msg-error { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-        .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
-        .footer-link { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #64748b; }
-        .footer-link a { color: #38bdf8; text-decoration: none; font-weight: 600; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #050a12; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .spinner { width: 44px; height: 44px; border: 4px solid rgba(0, 245, 196, 0.15); border-top-color: #00f5c4; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h3 { font-size: 1.15rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+        p { font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
 <body>
-    <div class="auth-card">
-        <div class="logo-row">
-            <div class="logo-badge">⚡ IM HOST Platform</div>
-            <h2 id="authTitle" style="margin-top: 12px; font-size: 1.4rem;">${isRegister ? 'Create Member Account' : 'Sign in to Dashboard'}</h2>
-        </div>
-        <div class="tabs">
-            <button class="tab-btn ${!isRegister ? 'active' : ''}" onclick="switchTab('login')">Sign In</button>
-            <button class="tab-btn ${isRegister ? 'active' : ''}" onclick="switchTab('register')">Register</button>
-        </div>
-        <div id="msgBox" class="msg-box"></div>
-        <form id="authForm" onsubmit="handleAuth(event)">
-            <div id="nameGroup" class="input-group" style="${isRegister ? '' : 'display:none;'}">
-                <label>Full Name</label>
-                <input type="text" id="nameInput" placeholder="John Doe">
-            </div>
-            <div class="input-group">
-                <label>Email Address</label>
-                <input type="email" id="emailInput" required placeholder="john@example.com">
-            </div>
-            <div class="input-group">
-                <label>Password</label>
-                <input type="password" id="passwordInput" required placeholder="••••••••">
-            </div>
-            <button type="submit" id="submitBtn" class="btn-submit">${isRegister ? 'Create Account' : 'Sign In Now'}</button>
-        </form>
-        <div class="footer-link"><a href="/">← Return to IM HOST Home</a></div>
-    </div>
+    <div class="spinner"></div>
+    <h3>Connecting to Secure Gateway...</h3>
+    <p>Please wait a moment while we redirect you to payment...</p>
+
+    <form id="payhereForm" method="post" action="${payhereUrl}">
+        <input type="hidden" name="merchant_id" value="${merchantId}">
+        <input type="hidden" name="return_url" value="${returnUrl}">
+        <input type="hidden" name="cancel_url" value="${cancelUrl}">
+        <input type="hidden" name="notify_url" value="${notifyUrl}">
+        <input type="hidden" name="order_id" value="${orderId}">
+        <input type="hidden" name="items" value="${itemDescription}">
+        <input type="hidden" name="currency" value="${currency}">
+        <input type="hidden" name="amount" value="${formattedAmount}">
+        <input type="hidden" name="first_name" value="${firstName}">
+        <input type="hidden" name="last_name" value="${lastName}">
+        <input type="hidden" name="email" value="${email}">
+        <input type="hidden" name="phone" value="${phone}">
+        <input type="hidden" name="address" value="Sri Lanka">
+        <input type="hidden" name="city" value="Colombo">
+        <input type="hidden" name="country" value="Sri Lanka">
+        <input type="hidden" name="hash" value="${hash}">
+        <input type="hidden" name="custom_1" value="${paymentRow.telegram_user_id}">
+        <input type="hidden" name="custom_2" value="${paymentRow.id}">
+    </form>
     <script>
-        let mode = '${isRegister ? 'register' : 'login'}';
-        function switchTab(newMode) {
-            mode = newMode;
-            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
-                btn.className = (idx === (mode === 'login' ? 0 : 1)) ? 'tab-btn active' : 'tab-btn';
-            });
-            document.getElementById('nameGroup').style.display = mode === 'register' ? 'block' : 'none';
-            document.getElementById('authTitle').innerText = mode === 'register' ? 'Create Member Account' : 'Sign in to Dashboard';
-            document.getElementById('submitBtn').innerText = mode === 'register' ? 'Create Account' : 'Sign In Now';
-            document.getElementById('msgBox').style.display = 'none';
-        }
-        async function handleAuth(e) {
-            e.preventDefault();
-            const msgBox = document.getElementById('msgBox');
-            const submitBtn = document.getElementById('submitBtn');
-            const email = document.getElementById('emailInput').value;
-            const password = document.getElementById('passwordInput').value;
-            const name = document.getElementById('nameInput').value;
-            msgBox.style.display = 'none';
-            submitBtn.disabled = true;
-            submitBtn.innerText = 'Processing...';
-            try {
-                const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, name })
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.message || 'Authentication failed');
-                localStorage.setItem('imhost_user', JSON.stringify(data.user));
-                msgBox.className = 'msg-box msg-success';
-                msgBox.innerText = data.message || 'Success! Redirecting...';
-                msgBox.style.display = 'block';
-                setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
-            } catch (err) {
-                msgBox.className = 'msg-box msg-error';
-                msgBox.innerText = err.message;
-                msgBox.style.display = 'block';
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerText = mode === 'register' ? 'Create Account' : 'Sign In Now';
-            }
-        }
+        document.getElementById('payhereForm').submit();
     </script>
 </body>
 </html>`);
