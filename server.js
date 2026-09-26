@@ -746,7 +746,7 @@ const server = http.createServer(async (req, res) => {
                 const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parseInt(paymentId, 10)]);
                 const pRow = pRes.rows[0];
                 if (pRow && (pRow.external_id || '').startsWith('IMHOST_DIR_')) {
-                    redirectUrl = '/';
+                    redirectUrl = '/profile';
                 }
             }
         } catch (e) {}
@@ -861,7 +861,7 @@ const server = http.createServer(async (req, res) => {
                 const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parseInt(paymentId, 10)]);
                 const pRow = pRes.rows[0];
                 if (pRow && (pRow.external_id || '').startsWith('IMHOST_DIR_')) {
-                    redirectUrl = '/';
+                    redirectUrl = '/profile';
                 }
             }
         } catch (e) {}
@@ -968,9 +968,33 @@ const server = http.createServer(async (req, res) => {
 </body></html>`);
     }
 
-        // 13. Serve Static Files from directory & 404 Route
-    let safePath = pathname === '/' ? '/index.html' : pathname;
-    let filePath = path.join(__dirname, safePath);
+    // 13. Dedicated /profile route for portfolio (index.html)
+    if (pathname === '/profile' || pathname === '/profile/') {
+        let indexPath = path.join(__dirname, 'index.html');
+        return fs.readFile(indexPath, (err, content) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'text/plain' });
+                return res.end('Error loading profile page');
+            }
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+            return res.end(content);
+        });
+    }
+
+    // Root path domain/ or /index.html returns 404 error page as requested
+    if (pathname === '/' || pathname === '' || pathname === '/index.html') {
+        let notFoundPath = path.join(__dirname, '404.html');
+        return fs.readFile(notFoundPath, (err, content) => {
+            res.writeHead(404, { 'Content-Type': 'text/html; charset=UTF-8' });
+            if (!err && content) {
+                return res.end(content);
+            }
+            return res.end('<h1>404 - Page Not Found</h1>');
+        });
+    }
+
+    // 14. Serve Static Files from directory & 404 Route for unmatched paths
+    let filePath = path.join(__dirname, pathname);
 
     fs.stat(filePath, (err, stats) => {
         if (!err && stats.isFile()) {
