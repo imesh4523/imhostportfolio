@@ -766,11 +766,17 @@ const server = http.createServer(async (req, res) => {
                 const pRow = pRes.rows[0];
 
                 if (pRow && pRow.telegram_user_id) {
+                    let creditCents = pRow.amount;
+                    if ((pRow.currency || '').toUpperCase() === 'LKR') {
+                        const lkrRate = 305.50;
+                        const usdAmount = (pRow.amount / 100) / lkrRate;
+                        creditCents = Math.round(usdAmount * 100);
+                    }
                     await pool.query(
                         `UPDATE telegram_users SET balance = balance + $1 WHERE id = $2`,
-                        [pRow.amount, pRow.telegram_user_id]
+                        [creditCents, pRow.telegram_user_id]
                     );
-                    console.log(`[IM HOST IPN] Credited ${pRow.amount} cents to user #${pRow.telegram_user_id}`);
+                    console.log(`[IM HOST IPN] Credited ${creditCents} USD cents (${pRow.currency} ${pRow.amount / 100}) to user #${pRow.telegram_user_id}`);
                 }
             } catch (err) {
                 console.error('[IM HOST IPN] Database update error:', err.message);
