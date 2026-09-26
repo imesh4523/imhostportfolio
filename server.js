@@ -88,6 +88,24 @@ const MIME_TYPES = {
     '.ttf': 'font/ttf'
 };
 
+// Active pair tokens with 10-minute expiry
+const activePairTokens = new Map();
+
+function getOrCreatePairToken() {
+    const now = Date.now();
+    for (const [token, info] of activePairTokens.entries()) {
+        if (info.expiresAt > now) {
+            return { token, expiresAt: info.expiresAt };
+        } else {
+            activePairTokens.delete(token);
+        }
+    }
+    const newToken = 'pair_' + crypto.randomBytes(10).toString('hex');
+    const expiresAt = now + (10 * 60 * 1000); // 10 minutes
+    activePairTokens.set(newToken, { createdAt: now, expiresAt });
+    return { token: newToken, expiresAt };
+}
+
 function parseBody(req) {
     return new Promise((resolve) => {
         let body = '';
@@ -159,11 +177,9 @@ const server = http.createServer(async (req, res) => {
         const currency = parsedUrl.query.currency || 'LKR';
 
         try {
-            // Get or create guest user in DB
             let userRes = await pool.query('SELECT id FROM telegram_users LIMIT 1');
             let userId = userRes.rows[0]?.id || 1;
 
-            // Insert pending payment record
             const amountInCents = Math.round(rawAmount * 100);
             const pRes = await pool.query(
                 `INSERT INTO payments (telegram_user_id, amount, currency, status, payment_method, external_id, created_at, updated_at) 
@@ -245,7 +261,7 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // 5. User Login & Signup Page UI: /login & /register
+    // 5. User Login & Signup Page UI
     if (pathname === '/login' || pathname === '/register') {
         const isRegister = pathname === '/register';
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
@@ -258,48 +274,18 @@ const server = http.createServer(async (req, res) => {
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body {
-            background: #050a12;
-            color: #f1f5f9;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background-image: radial-gradient(circle at top right, rgba(0, 245, 196, 0.08), transparent 40%),
-                              radial-gradient(circle at bottom left, rgba(123, 97, 255, 0.08), transparent 40%);
-        }
-        .auth-card {
-            background: #0d1522;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            max-width: 440px;
-            width: 100%;
-            padding: 36px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-        }
+        body { background: #050a12; color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .auth-card { background: #0d1522; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; max-width: 440px; width: 100%; padding: 36px; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
         .logo-row { text-align: center; margin-bottom: 25px; }
-        .logo-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0, 245, 196, 0.1);
-            color: #00f5c4;
-            padding: 6px 16px;
-            border-radius: 100px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border: 1px solid rgba(0, 245, 196, 0.2);
-        }
+        .logo-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 245, 196, 0.1); color: #00f5c4; padding: 6px 16px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; border: 1px solid rgba(0, 245, 196, 0.2); }
         .tabs { display: flex; background: rgba(255,255,255,0.04); padding: 4px; border-radius: 12px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.06); }
         .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: 700; font-size: 0.9rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
         .tab-btn.active { background: #00f5c4; color: #050a12; box-shadow: 0 4px 12px rgba(0,245,196,0.3); }
         .input-group { margin-bottom: 16px; text-align: left; }
         .input-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 700; margin-bottom: 6px; }
-        .input-group input { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
+        .input-group input { width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; }
         .input-group input:focus { border-color: #00f5c4; }
-        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #00f5c4, #00c9ff); color: #041019; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: transform 0.2s; }
-        .btn-submit:hover { transform: translateY(-2px); }
+        .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #00f5c4, #00c9ff); color: #041019; border: none; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; margin-top: 10px; }
         .msg-box { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 0.85rem; display: none; }
         .msg-error { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
         .msg-success { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
@@ -313,14 +299,11 @@ const server = http.createServer(async (req, res) => {
             <div class="logo-badge">⚡ IM HOST Platform</div>
             <h2 id="authTitle" style="margin-top: 12px; font-size: 1.4rem;">${isRegister ? 'Create Member Account' : 'Sign in to Dashboard'}</h2>
         </div>
-
         <div class="tabs">
             <button class="tab-btn ${!isRegister ? 'active' : ''}" onclick="switchTab('login')">Sign In</button>
             <button class="tab-btn ${isRegister ? 'active' : ''}" onclick="switchTab('register')">Register</button>
         </div>
-
         <div id="msgBox" class="msg-box"></div>
-
         <form id="authForm" onsubmit="handleAuth(event)">
             <div id="nameGroup" class="input-group" style="${isRegister ? '' : 'display:none;'}">
                 <label>Full Name</label>
@@ -336,15 +319,10 @@ const server = http.createServer(async (req, res) => {
             </div>
             <button type="submit" id="submitBtn" class="btn-submit">${isRegister ? 'Create Account' : 'Sign In Now'}</button>
         </form>
-
-        <div class="footer-link">
-            <a href="/">← Return to IM HOST Home</a>
-        </div>
+        <div class="footer-link"><a href="/">← Return to IM HOST Home</a></div>
     </div>
-
     <script>
         let mode = '${isRegister ? 'register' : 'login'}';
-
         function switchTab(newMode) {
             mode = newMode;
             document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
@@ -355,7 +333,6 @@ const server = http.createServer(async (req, res) => {
             document.getElementById('submitBtn').innerText = mode === 'register' ? 'Create Account' : 'Sign In Now';
             document.getElementById('msgBox').style.display = 'none';
         }
-
         async function handleAuth(e) {
             e.preventDefault();
             const msgBox = document.getElementById('msgBox');
@@ -363,11 +340,9 @@ const server = http.createServer(async (req, res) => {
             const email = document.getElementById('emailInput').value;
             const password = document.getElementById('passwordInput').value;
             const name = document.getElementById('nameInput').value;
-
             msgBox.style.display = 'none';
             submitBtn.disabled = true;
             submitBtn.innerText = 'Processing...';
-
             try {
                 const endpoint = mode === 'register' ? '/api/auth/register' : '/api/auth/login';
                 const res = await fetch(endpoint, {
@@ -376,19 +351,12 @@ const server = http.createServer(async (req, res) => {
                     body: JSON.stringify({ email, password, name })
                 });
                 const data = await res.json();
-
-                if (!res.ok || !data.success) {
-                    throw new Error(data.message || 'Authentication failed');
-                }
-
+                if (!res.ok || !data.success) throw new Error(data.message || 'Authentication failed');
                 localStorage.setItem('imhost_user', JSON.stringify(data.user));
                 msgBox.className = 'msg-box msg-success';
                 msgBox.innerText = data.message || 'Success! Redirecting...';
                 msgBox.style.display = 'block';
-
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 1000);
+                setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
             } catch (err) {
                 msgBox.className = 'msg-box msg-error';
                 msgBox.innerText = err.message;
@@ -434,7 +402,6 @@ const server = http.createServer(async (req, res) => {
             <div class="logo">IM HOST Platform</div>
             <button class="btn-logout" onclick="logout()">Logout</button>
         </div>
-
         <div class="grid">
             <div class="card">
                 <h3>Account Name</h3>
@@ -449,14 +416,12 @@ const server = http.createServer(async (req, res) => {
                 <div class="val" id="userCredits">25 Checks</div>
             </div>
         </div>
-
         <div class="pricing-banner">
             <h2>Order API Integration & Verification Checks</h2>
             <p style="color:#94a3b8; margin-top:8px;">Instant PayHere Checkout starting from just Rs. 100.</p>
             <a href="/buy?plan=Basic%20API%20Check&amount=100&currency=LKR" class="btn-topup">Buy API Checks with PayHere (Rs. 100) ➔</a>
         </div>
     </div>
-
     <script>
         const user = JSON.parse(localStorage.getItem('imhost_user') || 'null');
         if (!user) {
@@ -466,7 +431,6 @@ const server = http.createServer(async (req, res) => {
             document.getElementById('userPlan').innerText = user.plan || 'Active Member';
             document.getElementById('userCredits').innerText = (user.api_credits || 25) + ' Checks';
         }
-
         function logout() {
             localStorage.removeItem('imhost_user');
             window.location.href = '/login';
@@ -476,18 +440,24 @@ const server = http.createServer(async (req, res) => {
 </html>`);
     }
 
-    // 7. Pairing UI Endpoint: /pair or /pair/:token
+    // 7. Pairing UI Endpoint: /pair or /pair/:token (10-minute auto-refresh + already connected state)
     if (pathname === '/pair' || pathname.startsWith('/pair/')) {
         let token = pathname.replace(/^\/pair\/?/, '').trim();
-        if (!token) {
-            token = 'pair_' + crypto.randomBytes(12).toString('hex');
-            res.writeHead(302, { Location: `/pair/${token}` });
+        const now = Date.now();
+        let tokenData = activePairTokens.get(token);
+
+        // If no token or token expired (older than 10 mins), generate fresh 10-minute token and redirect
+        if (!token || !tokenData || tokenData.expiresAt <= now) {
+            const pairInfo = getOrCreatePairToken();
+            res.writeHead(302, { Location: `/pair/${pairInfo.token}` });
             return res.end();
         }
 
         const pairUrl = `${baseUrl}/pair/${token}`;
         const currentGatewayUrl = (await getDbSetting('PAYHERE_GATEWAY_URL')) || '';
+        const mainAppUrl = (await getDbSetting('APP_URL')) || 'https://youuhost.com';
         const isPaired = (await getDbSetting('PAYHERE_STATUS')) === 'connected' && currentGatewayUrl.length > 0;
+        const remainingSeconds = Math.max(0, Math.floor((tokenData.expiresAt - now) / 1000));
 
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
@@ -496,46 +466,89 @@ const server = http.createServer(async (req, res) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="no-referrer-when-downgrade">
-    <title>IM HOST - Gateway Pairing Portal</title>
+    <title>IM HOST - PayHere Gateway Pairing Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: #070c14; color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 24px; max-width: 580px; width: 100%; padding: 40px; text-align: center; }
-        .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 245, 196, 0.12); color: #00f5c4; padding: 6px 16px; border-radius: 100px; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(0, 245, 196, 0.25); }
-        .pairing-box { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 20px; text-align: left; margin-bottom: 25px; }
-        .url-row { display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 10px 14px; }
+        .card { background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 24px; max-width: 600px; width: 100%; padding: 40px; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.6); }
+        .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0, 245, 196, 0.12); color: #00f5c4; padding: 6px 16px; border-radius: 100px; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; border: 1px solid rgba(0, 245, 196, 0.25); }
+        .pairing-box { background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 20px; text-align: left; margin-bottom: 25px; }
+        .url-row { display: flex; align-items: center; gap: 10px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px 14px; }
         .url-text { flex: 1; font-family: monospace; font-size: 0.9rem; color: #38bdf8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .btn-copy { background: #00f5c4; color: #041019; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; }
-        .status-container { padding: 14px; border-radius: 12px; font-size: 0.9rem; font-weight: 600; text-align: center; }
-        .status-waiting { background: rgba(234, 179, 8, 0.1); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.2); }
-        .status-success { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+        .btn-copy { background: #00f5c4; color: #041019; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .btn-copy:hover { transform: scale(1.03); }
+        .timer-badge { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; font-size: 0.8rem; color: #94a3b8; }
+        .timer-val { color: #facc15; font-weight: 700; font-family: monospace; }
+        .status-container { padding: 18px; border-radius: 14px; font-size: 0.95rem; font-weight: 700; text-align: center; margin-top: 20px; line-height: 1.5; }
+        .status-waiting { background: rgba(234, 179, 8, 0.1); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.25); }
+        .status-success { background: rgba(34, 197, 94, 0.12); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .btn-new-code { display: inline-block; margin-top: 15px; font-size: 0.8rem; color: #94a3b8; text-decoration: none; border-bottom: 1px dashed #64748b; }
+        .btn-new-code:hover { color: #38bdf8; }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="badge">PayHere Approved Gateway</div>
-        <h1>Gateway Pairing Portal</h1>
-        <p style="color:#94a3b8; margin: 10px 0 25px;">Connect this gateway instance to your main Shop Bot instance for automated PayHere checkout & webhooks.</p>
+        <div class="badge">⚡ PayHere Approved Domain Gateway</div>
+        <h1 style="font-size:1.6rem; font-weight:800;">Gateway Pairing Portal</h1>
+        <p style="color:#94a3b8; margin: 10px 0 25px; font-size:0.9rem;">Copy this 1-click Pairing link and paste it into your <b>Admin Dashboard (PayHere Gateway)</b> to synchronize checkout & webhooks.</p>
+        
         <div class="pairing-box">
-            <div style="font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700; margin-bottom:8px;">Instant Pairing URL</div>
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; text-transform:uppercase; color:#64748b; font-weight:700; margin-bottom:8px;">
+                <span>Active 1-Click Pairing Link</span>
+                <span class="timer-val" id="countdownDisplay">10:00</span>
+            </div>
             <div class="url-row">
                 <span class="url-text" id="pairUrl">${pairUrl}</span>
-                <button class="btn-copy" onclick="copyPairUrl()">Copy URL</button>
+                <button class="btn-copy" id="copyBtn" onclick="copyPairUrl()">Copy Link</button>
+            </div>
+            <div class="timer-badge">
+                <span>🔄 10-Minute Auto-Refresh Window</span>
+                <span>Auto-generates fresh key if expired</span>
             </div>
         </div>
+
         <div id="statusBox" class="status-container ${isPaired ? 'status-success' : 'status-waiting'}">
-            ${isPaired ? '🟢 Connected to Shop Bot Platform' : '⏳ Waiting for Shop Bot to complete handshake...'}
+            ${isPaired 
+                ? '✅ THIS LINK IS ALREADY CONNECTED & ACTIVE!<br><span style="font-size:0.85rem; color:#86efac; font-weight:500;">Paired with Shopeefy Main Store (' + mainAppUrl + ')</span>' 
+                : '⏳ Waiting for Admin Dashboard to connect with this link...'}
+        </div>
+
+        <div>
+            <a href="/pair" class="btn-new-code">🔄 Generate Fresh Pairing Code</a>
         </div>
     </div>
+
     <script>
+        let secondsLeft = ${remainingSeconds};
+        const countdownElem = document.getElementById('countdownDisplay');
+
+        function updateCountdown() {
+            const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+            const s = (secondsLeft % 60).toString().padStart(2, '0');
+            countdownElem.innerText = 'Expires in ' + m + ':' + s;
+            if (secondsLeft <= 0) {
+                window.location.href = '/pair';
+            } else {
+                secondsLeft--;
+            }
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
         function copyPairUrl() {
             navigator.clipboard.writeText(document.getElementById('pairUrl').innerText).then(() => {
-                const btn = document.querySelector('.btn-copy');
+                const btn = document.getElementById('copyBtn');
                 btn.innerText = 'Copied! ✓';
-                setTimeout(() => { btn.innerText = 'Copy URL'; }, 2000);
+                btn.style.background = '#4ade80';
+                setTimeout(() => { 
+                    btn.innerText = 'Copy Link'; 
+                    btn.style.background = '#00f5c4';
+                }, 2000);
             });
         }
+
+        // Real-time status poll every 2s
         setInterval(async () => {
             try {
                 const res = await fetch('/api/pair/status?token=${token}');
@@ -543,10 +556,10 @@ const server = http.createServer(async (req, res) => {
                 const box = document.getElementById('statusBox');
                 if (data.status === 'connected') {
                     box.className = 'status-container status-success';
-                    box.innerHTML = '🟢 Successfully Paired with Shop Bot (' + (data.mainAppUrl || 'Connected') + ')';
+                    box.innerHTML = '✅ THIS LINK IS ALREADY CONNECTED & ACTIVE!<br><span style="font-size:0.85rem; color:#86efac; font-weight:500;">Paired with Shopeefy Main Store (' + (data.mainAppUrl || 'https://youuhost.com') + ')</span>';
                 }
             } catch (e) {}
-        }, 3000);
+        }, 2000);
     </script>
 </body>
 </html>`);
@@ -557,7 +570,7 @@ const server = http.createServer(async (req, res) => {
         const queryToken = parsedUrl.query.token || '';
         const status = (await getDbSetting('PAYHERE_STATUS')) || 'waiting';
         const gatewayUrl = (await getDbSetting('PAYHERE_GATEWAY_URL')) || '';
-        const mainAppUrl = (await getDbSetting('APP_URL')) || '';
+        const mainAppUrl = (await getDbSetting('APP_URL')) || 'https://youuhost.com';
         const isMatched = status === 'connected' && gatewayUrl.length > 0;
 
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -580,6 +593,7 @@ const server = http.createServer(async (req, res) => {
         await setDbSetting('PAYHERE_STATUS', 'connected');
         await setDbSetting('PAYHERE_ENABLED', 'true');
 
+        if (mainAppUrl) await setDbSetting('APP_URL', mainAppUrl);
         if (merchantId) await setDbSetting('PAYHERE_MERCHANT_ID', merchantId);
         if (merchantSecret) await setDbSetting('PAYHERE_MERCHANT_SECRET', merchantSecret);
 
@@ -604,7 +618,6 @@ const server = http.createServer(async (req, res) => {
             return res.end(`<h2>Invalid Checkout Request: Missing payment ID.</h2>`);
         }
 
-        // Fetch payment details from shared DB
         let paymentRow = null;
         let tgUserRow = null;
         try {
@@ -633,10 +646,8 @@ const server = http.createServer(async (req, res) => {
         const currency = paymentRow.currency || 'USD';
         const orderId = `API_${paymentRow.id}`;
 
-        // Safe Generic Item Description (API Checking Service)
         const itemDescription = `API Checking Service #${paymentRow.id}`;
 
-        // Compute PayHere MD5 Hash
         const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
         const hash = crypto.createHash('md5').update(merchantId + orderId + formattedAmount + currency + hashedSecret).digest('hex').toUpperCase();
 
@@ -746,149 +757,94 @@ const server = http.createServer(async (req, res) => {
             console.log(`[IM HOST IPN] Payment #${parsedPaymentId} SUCCESS! Updating shared DB.`);
 
             try {
-                const pRes = await pool.query(
-                    `UPDATE payments 
-                     SET status = 'completed', external_id = $1, txid = $1, updated_at = NOW() 
-                     WHERE id = $2 RETURNING *`,
-                    [payment_id || `PAYHERE-${Date.now()}`, parsedPaymentId]
+                await pool.query(
+                    `UPDATE payments SET status = 'completed', external_id = $1, updated_at = NOW() WHERE id = $2`,
+                    [payment_id ? `PAYHERE_${payment_id}` : order_id, parsedPaymentId]
                 );
 
-                const payment = pRes.rows[0];
-                const finalUserId = userId || payment?.telegram_user_id;
+                const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parsedPaymentId]);
+                const pRow = pRes.rows[0];
 
-                if (payment && finalUserId) {
+                if (pRow && pRow.telegram_user_id) {
                     await pool.query(
-                        `UPDATE telegram_users 
-                         SET balance = balance + $1 
-                         WHERE id = $2`,
-                        [payment.amount, finalUserId]
+                        `UPDATE telegram_users SET balance = balance + $1 WHERE id = $2`,
+                        [pRow.amount, pRow.telegram_user_id]
                     );
+                    console.log(`[IM HOST IPN] Credited ${pRow.amount} cents to user #${pRow.telegram_user_id}`);
                 }
             } catch (err) {
                 console.error('[IM HOST IPN] Database update error:', err.message);
             }
+
+            res.writeHead(200);
+            return res.end('OK');
         }
 
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        return res.end('OK');
+        res.writeHead(200);
+        return res.end('Ignored non-success status: ' + status_code);
     }
 
-    // 12. Payment Return Page
+    // 12. Payment Return & Cancel URLs
     if (pathname === '/payment-return') {
-        const paymentId = parsedUrl.query.payment_id || parsedUrl.query.order_id || '';
-        const mainAppUrl = (await getDbSetting('APP_URL')) || process.env.MAIN_APP_URL || 'http://localhost:5000';
-        const redirectUrl = `${mainAppUrl}/?payment=success&id=${paymentId}`;
-
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8', 'Referrer-Policy': 'no-referrer' });
+        const paymentId = parsedUrl.query.payment_id;
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="referrer" content="no-referrer">
-    <meta http-equiv="refresh" content="3;url=${redirectUrl}">
-    <title>Payment Successful</title>
-    <style>
-        body { background: #050a12; color: #f1f5f9; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .box { background: #0d1522; padding: 40px; border-radius: 20px; border: 1px solid rgba(0, 245, 196, 0.2); max-width: 480px; }
-        h1 { color: #00f5c4; margin-bottom: 10px; }
-        p { color: #94a3b8; margin-bottom: 20px; }
-        a { color: #38bdf8; text-decoration: none; font-weight: 700; }
-    </style>
-</head>
+<html>
+<head><meta charset="UTF-8"><title>Payment Complete</title>
+<style>body{background:#050a12;color:#fff;font-family:sans-serif;text-align:center;padding:80px 20px;}
+.box{background:#0d1522;padding:40px;border-radius:20px;max-width:440px;margin:0 auto;border:1px solid rgba(255,255,255,0.1);}</style></head>
 <body>
-    <div class="box">
-        <h1>🎉 Payment Successful!</h1>
-        <p>Your transaction has been securely processed by PayHere and credited.</p>
-        <p>Redirecting you back in 3 seconds...</p>
-        <p><a href="${redirectUrl}">Click here if not redirected automatically ➔</a></p>
-    </div>
-</body>
-</html>`);
+<div class="box">
+    <h1 style="color:#00f5c4;font-size:3rem;">✓</h1>
+    <h2>Payment Successful!</h2>
+    <p style="color:#94a3b8;margin:15px 0 25px;">Your deposit #${paymentId || ''} has been credited to your account balance.</p>
+    <a href="/" style="display:inline-block;padding:12px 24px;background:#00f5c4;color:#000;border-radius:10px;text-decoration:none;font-weight:700;">Return to Home</a>
+</div>
+</body></html>`);
     }
 
-    // 13. Payment Cancel Page
     if (pathname === '/payment-cancel') {
-        const mainAppUrl = (await getDbSetting('APP_URL')) || process.env.MAIN_APP_URL || 'http://localhost:5000';
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8', 'Referrer-Policy': 'no-referrer' });
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="referrer" content="no-referrer">
-    <title>Payment Cancelled</title>
-    <style>
-        body { background: #050a12; color: #f1f5f9; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
-        .box { background: #0d1522; padding: 40px; border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.1); max-width: 480px; }
-        h1 { color: #ff6b6b; margin-bottom: 10px; }
-        p { color: #94a3b8; margin-bottom: 20px; }
-        a { color: #00f5c4; text-decoration: none; font-weight: bold; }
-    </style>
-</head>
+<html>
+<head><meta charset="UTF-8"><title>Payment Cancelled</title>
+<style>body{background:#050a12;color:#fff;font-family:sans-serif;text-align:center;padding:80px 20px;}
+.box{background:#0d1522;padding:40px;border-radius:20px;max-width:440px;margin:0 auto;border:1px solid rgba(255,255,255,0.1);}</style></head>
 <body>
-    <div class="box">
-        <h1>Payment Cancelled</h1>
-        <p>Transaction was cancelled. No charges were made.</p>
-        <p><a href="/">Return to Home ➔</a></p>
-    </div>
-</body>
-</html>`);
+<div class="box">
+    <h1 style="color:#f87171;font-size:3rem;">✕</h1>
+    <h2>Payment Cancelled</h2>
+    <p style="color:#94a3b8;margin:15px 0 25px;">The checkout transaction was cancelled.</p>
+    <a href="/" style="display:inline-block;padding:12px 24px;background:#38bdf8;color:#000;border-radius:10px;text-decoration:none;font-weight:700;">Return to Home</a>
+</div>
+</body></html>`);
     }
 
-    // 14. Standard Static & HTML Policy Routes
-    let targetFile = null;
-    if (pathname === '/' || pathname === '' || pathname === '/profile' || pathname === '/profile/') {
-        targetFile = 'index.html';
-    } else if (pathname === '/profile/refund' || pathname === '/profile/refund/' || pathname === '/refund' || pathname === '/refund/' || pathname === '/profile/return-policy' || pathname === '/return-policy') {
-        targetFile = 'refund.html';
-    } else if (pathname === '/profile/privacy' || pathname === '/profile/privacy/' || pathname === '/privacy' || pathname === '/privacy/' || pathname === '/profile/privacy-policy' || pathname === '/privacy-policy') {
-        targetFile = 'privacy.html';
-    } else if (pathname === '/profile/terms' || pathname === '/profile/terms/' || pathname === '/terms' || pathname === '/terms/' || pathname === '/profile/terms-and-conditions' || pathname === '/terms-and-conditions') {
-        targetFile = 'terms.html';
-    }
-
-    if (targetFile) {
-        let filePath = path.join(__dirname, targetFile);
-        if (!fs.existsSync(filePath)) {
-            filePath = path.join(__dirname, 'imhost-main', targetFile);
-        }
-        res.writeHead(200, {
-            'Content-Type': 'text/html; charset=UTF-8',
-            'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*'
-        });
-        const stream = fs.createReadStream(filePath);
-        return stream.pipe(res);
-    }
-
-    // Static Assets
-    let cleanPath = pathname.replace(/^\/profile\//, '/');
-    let safePath = path.normalize(cleanPath).replace(/^(\.\.[\/\\])+/, '');
+    // 13. Serve Static Files from directory
+    let safePath = pathname === '/' ? '/index.html' : pathname;
     let filePath = path.join(__dirname, safePath);
-    if (!fs.existsSync(filePath)) {
-        filePath = path.join(__dirname, 'imhost-main', safePath);
-    }
 
     fs.stat(filePath, (err, stats) => {
-        if (err || !stats.isFile()) {
-            res.writeHead(404, { 'Content-Type': 'text/html; charset=UTF-8' });
-            return res.end(`<h2>404 Not Found</h2><p><a href="/">Return to Home</a></p>`);
+        if (!err && stats.isFile()) {
+            const ext = path.extname(filePath).toLowerCase();
+            const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+            res.writeHead(200, { 'Content-Type': contentType });
+            fs.createReadStream(filePath).pipe(res);
+        } else {
+            let indexPath = path.join(__dirname, 'index.html');
+            fs.readFile(indexPath, (err2, content) => {
+                if (err2) {
+                    res.writeHead(404, { 'Content-Type': 'text/plain' });
+                    res.end('404 Not Found');
+                } else {
+                    res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+                    res.end(content);
+                }
+            });
         }
-
-        const ext = path.extname(filePath).toLowerCase();
-        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-        res.writeHead(200, { 'Content-Type': contentType, 'Cache-Control': 'no-cache' });
-        const stream = fs.createReadStream(filePath);
-        stream.pipe(res);
     });
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log('=====================================================');
-    console.log(`🚀 [IM HOST] Server Running with Member Auth & PayHere!`);
-    console.log(`🔗 Main Website:   http://localhost:${PORT}/`);
-    console.log(`🔑 Member Login:   http://localhost:${PORT}/login`);
-    console.log(`📝 Member Register: http://localhost:${PORT}/register`);
-    console.log(`📊 Dashboard:       http://localhost:${PORT}/dashboard`);
-    console.log(`⚡ Pairing Portal:  http://localhost:${PORT}/pair`);
-    console.log('=====================================================');
+    console.log(`[IM HOST] Production Gateway Server running on http://0.0.0.0:${PORT}`);
 });
