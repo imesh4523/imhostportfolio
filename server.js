@@ -446,6 +446,30 @@ const server = http.createServer(async (req, res) => {
         }));
     }
 
+        // Direct /buy route for portfolio & items
+    if (pathname === '/buy' || pathname.startsWith('/buy')) {
+        const planName = parsedUrl.query.plan || 'API Checking Plan';
+        const rawAmount = parseFloat(parsedUrl.query.amount) || 100;
+        const currency = (parsedUrl.query.currency || 'LKR').toUpperCase();
+        try {
+            let userRes = await pool.query('SELECT id FROM telegram_users LIMIT 1');
+            let userId = userRes.rows[0]?.id || 1;
+            const amountInCents = Math.round(rawAmount * 100);
+            const pRes = await pool.query(
+                `INSERT INTO payments (telegram_user_id, amount, currency, status, payment_method, external_id, created_at, updated_at) 
+                 VALUES ($1, $2, $3, 'pending', 'payhere', $4, NOW(), NOW()) RETURNING id`,
+                [userId, amountInCents, currency, `IMHOST_DIR_${Date.now()}`]
+            );
+            const paymentId = pRes.rows[0].id;
+            res.writeHead(302, { Location: `/checkout?payment_id=${paymentId}` });
+            return res.end();
+        } catch (err) {
+            console.error('[IM HOST DIRECT BUY] Error:', err.message);
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            return res.end('Database error creating buy session: ' + err.message);
+        }
+    }
+
     // 10. Checkout Route: /checkout (PayHere Auto Form & Direct Auto-Redirect)
     if (pathname === '/checkout' || pathname.startsWith('/checkout/')) {
         let paymentId = parsedUrl.query.payment_id || parsedUrl.query.sessionId || parsedUrl.query.order_id;
@@ -605,7 +629,31 @@ const server = http.createServer(async (req, res) => {
                 if (pRow && pRow.telegram_user_id) {
                     let creditCents = pRow.amount;
                     if ((pRow.currency || '').toUpperCase() === 'LKR') {
-                        const lkrRate = 305.50;
+                        let lkrRate = 329.92;
+                        try {
+                            const https = require('https');
+                            const ratePromise = new Promise((resolve) => {
+                                const reqRate = https.get('https://open.er-api.com/v6/latest/USD', { timeout: 3000 }, (resp) => {
+                                    let data = '';
+                                    resp.on('data', chunk => data += chunk);
+                                    resp.on('end', () => {
+                                        try {
+                                            const json = JSON.parse(data);
+                                            if (json && json.rates && json.rates.LKR) {
+                                                resolve(json.rates.LKR);
+                                            } else {
+                                                resolve(329.92);
+                                            }
+                                        } catch(e) { resolve(329.92); }
+                                    });
+                                });
+                                reqRate.on('error', () => resolve(329.92));
+                                reqRate.setTimeout(3000, () => { reqRate.destroy(); resolve(329.92); });
+                            });
+                            lkrRate = await ratePromise;
+                        } catch (e) {
+                            lkrRate = 329.92;
+                        }
                         const usdAmount = (pRow.amount / 100) / lkrRate;
                         creditCents = Math.round(usdAmount * 100);
                     }
