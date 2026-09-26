@@ -446,7 +446,7 @@ const server = http.createServer(async (req, res) => {
         }));
     }
 
-    // 10. Checkout Route: /checkout (PayHere Auto Form & Redirect with Clean Referrer)
+    // 10. Checkout Route: /checkout (PayHere Auto Form & Direct Auto-Redirect)
     if (pathname === '/checkout' || pathname.startsWith('/checkout/')) {
         let paymentId = parsedUrl.query.payment_id || parsedUrl.query.sessionId || parsedUrl.query.order_id;
         if (!paymentId && pathname.startsWith('/checkout/')) {
@@ -483,17 +483,11 @@ const server = http.createServer(async (req, res) => {
 
         const rawAmount = (paymentRow.amount / 100);
         const formattedAmount = rawAmount.toFixed(2);
-        const currency = paymentRow.currency || 'USD';
+        const currency = (paymentRow.currency || 'USD').toUpperCase();
         const orderId = `API_${paymentRow.id}`;
 
-        const currency = (paymentRow.currency || 'USD').toUpperCase();
-        let apiKeysCount = 1;
-        if (currency === 'LKR') {
-            apiKeysCount = Math.max(1, Math.round(rawAmount / 50));
-        } else {
-            apiKeysCount = Math.max(1, Math.round((rawAmount * 305.5) / 50));
-        }
-        const itemDescription = `API Key Validation Token (${apiKeysCount} Keys)`;
+        // Item description requested by user
+        const itemDescription = `API Checking Service #${paymentRow.id}`;
 
         const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
         const hash = crypto.createHash('md5').update(merchantId + orderId + formattedAmount + currency + hashedSecret).digest('hex').toUpperCase();
@@ -517,53 +511,49 @@ const server = http.createServer(async (req, res) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="origin">
-    <title>Secure Checkout - API Checking Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Connecting to Secure PayHere Gateway...</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { background: #050a12; color: #f1f5f9; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .checkout-card { background: #0d1522; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; max-width: 480px; width: 100%; padding: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); text-align: center; }
-        .badge { background: rgba(0, 245, 196, 0.1); color: #00f5c4; padding: 6px 14px; border-radius: 100px; font-size: 0.8rem; font-weight: 700; display: inline-block; margin-bottom: 20px; border: 1px solid rgba(0, 245, 196, 0.2); }
-        .amount-display { font-size: 2.2rem; font-weight: 800; color: #38bdf8; margin: 15px 0 25px; }
-        .details-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 25px; font-size: 0.9rem; }
-        .row { display: flex; justify-content: space-between; margin-bottom: 10px; color: #94a3b8; }
-        .btn-pay { background: linear-gradient(135deg, #00f5c4, #00c9ff); color: #041019; width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 1.05rem; font-weight: 800; cursor: pointer; box-shadow: 0 10px 25px rgba(0, 245, 196, 0.3); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #050a12; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .spinner { width: 44px; height: 44px; border: 4px solid rgba(0, 245, 196, 0.15); border-top-color: #00f5c4; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        h3 { font-size: 1.15rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
+        p { font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
 <body>
-    <div class="checkout-card">
-        <div class="badge">🔒 Verified PayHere Gateway</div>
-        <h2>Complete Your Payment</h2>
-        <div class="amount-display">${currency} ${formattedAmount}</div>
-        <div class="details-box">
-            <div class="row"><span>Service:</span><span style="color:#fff; font-weight:600;">API Checking Service</span></div>
-            <div class="row"><span>Reference ID:</span><span style="color:#fff; font-weight:600;">#${paymentRow.id}</span></div>
-            <div class="row"><span>Status:</span><span style="color:#4ade80; font-weight:600;">Active 🟢</span></div>
-        </div>
+    <div class="spinner"></div>
+    <h3>Connecting to PayHere Gateway...</h3>
+    <p>Please wait a moment while we redirect you to payment...</p>
 
-        <form id="payhereForm" method="post" action="${payhereUrl}">
-            <input type="hidden" name="merchant_id" value="${merchantId}">
-            <input type="hidden" name="return_url" value="${returnUrl}">
-            <input type="hidden" name="cancel_url" value="${cancelUrl}">
-            <input type="hidden" name="notify_url" value="${notifyUrl}">
-            <input type="hidden" name="order_id" value="${orderId}">
-            <input type="hidden" name="items" value="${itemDescription}">
-            <input type="hidden" name="currency" value="${currency}">
-            <input type="hidden" name="amount" value="${formattedAmount}">
-            <input type="hidden" name="first_name" value="${firstName}">
-            <input type="hidden" name="last_name" value="${lastName}">
-            <input type="hidden" name="email" value="${email}">
-            <input type="hidden" name="phone" value="${phone}">
-            <input type="hidden" name="address" value="Sri Lanka">
-            <input type="hidden" name="city" value="Colombo">
-            <input type="hidden" name="country" value="Sri Lanka">
-            <input type="hidden" name="hash" value="${hash}">
-            <input type="hidden" name="custom_1" value="${paymentRow.telegram_user_id}">
-            <input type="hidden" name="custom_2" value="${paymentRow.id}">
-
-            <button type="submit" class="btn-pay">Pay with PayHere Now ➔</button>
-        </form>
-    </div>
+    <form id="payhereForm" method="post" action="${payhereUrl}">
+        <input type="hidden" name="merchant_id" value="${merchantId}">
+        <input type="hidden" name="return_url" value="${returnUrl}">
+        <input type="hidden" name="cancel_url" value="${cancelUrl}">
+        <input type="hidden" name="notify_url" value="${notifyUrl}">
+        <input type="hidden" name="order_id" value="${orderId}">
+        <input type="hidden" name="items" value="${itemDescription}">
+        <input type="hidden" name="currency" value="${currency}">
+        <input type="hidden" name="amount" value="${formattedAmount}">
+        <input type="hidden" name="first_name" value="${firstName}">
+        <input type="hidden" name="last_name" value="${lastName}">
+        <input type="hidden" name="email" value="${email}">
+        <input type="hidden" name="phone" value="${phone}">
+        <input type="hidden" name="address" value="Sri Lanka">
+        <input type="hidden" name="city" value="Colombo">
+        <input type="hidden" name="country" value="Sri Lanka">
+        <input type="hidden" name="hash" value="${hash}">
+        <input type="hidden" name="custom_1" value="${paymentRow.telegram_user_id}">
+        <input type="hidden" name="custom_2" value="${paymentRow.id}">
+    </form>
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('payhereForm').submit();
+        });
+        setTimeout(function() {
+            document.getElementById('payhereForm').submit();
+        }, 300);
+    </script>
 </body>
 </html>`);
     }
@@ -640,36 +630,79 @@ const server = http.createServer(async (req, res) => {
     // 12. Payment Return & Cancel URLs
     if (pathname === '/payment-return') {
         const paymentId = parsedUrl.query.payment_id;
+        let redirectUrl = 'https://youuhost.com';
+        try {
+            if (paymentId) {
+                const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parseInt(paymentId, 10)]);
+                const pRow = pRes.rows[0];
+                if (pRow && (pRow.external_id || '').startsWith('IMHOST_DIR_')) {
+                    redirectUrl = '/';
+                }
+            }
+        } catch (e) {}
+
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Payment Complete</title>
-<style>body{background:#050a12;color:#fff;font-family:sans-serif;text-align:center;padding:80px 20px;}
-.box{background:#0d1522;padding:40px;border-radius:20px;max-width:440px;margin:0 auto;border:1px solid rgba(255,255,255,0.1);}</style></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Successful</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background:#050a12; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align:center; padding:60px 20px; }
+        .box { background:#0d1522; padding:36px; border-radius:20px; max-width:440px; margin:0 auto; border:1px solid rgba(255,255,255,0.1); }
+        .btn { display:inline-block; padding:12px 28px; background:#00f5c4; color:#000; border-radius:12px; text-decoration:none; font-weight:700; margin-top:20px; }
+    </style>
+</head>
 <body>
 <div class="box">
-    <h1 style="color:#00f5c4;font-size:3rem;">✓</h1>
-    <h2>Payment Successful!</h2>
-    <p style="color:#94a3b8;margin:15px 0 25px;">Your deposit #${paymentId || ''} has been credited to your account balance.</p>
-    <a href="/" style="display:inline-block;padding:12px 24px;background:#00f5c4;color:#000;border-radius:10px;text-decoration:none;font-weight:700;">Return to Home</a>
+    <div style="font-size:3rem; margin-bottom:10px;">✅</div>
+    <h2 style="font-size:1.4rem;">Payment Successful!</h2>
+    <p style="color:#94a3b8; margin:15px 0 20px; font-size:0.9rem;">Your payment #${paymentId || ''} has been completed and credited to your balance.</p>
+    <a href="${redirectUrl}" class="btn">Return to Store</a>
 </div>
+<script>
+    setTimeout(function() { window.location.href = "${redirectUrl}"; }, 2000);
+</script>
 </body></html>`);
     }
 
     if (pathname === '/payment-cancel') {
+        const paymentId = parsedUrl.query.payment_id;
+        let redirectUrl = 'https://youuhost.com';
+        try {
+            if (paymentId) {
+                const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parseInt(paymentId, 10)]);
+                const pRow = pRes.rows[0];
+                if (pRow && (pRow.external_id || '').startsWith('IMHOST_DIR_')) {
+                    redirectUrl = '/';
+                }
+            }
+        } catch (e) {}
+
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
 <html>
-<head><meta charset="UTF-8"><title>Payment Cancelled</title>
-<style>body{background:#050a12;color:#fff;font-family:sans-serif;text-align:center;padding:80px 20px;}
-.box{background:#0d1522;padding:40px;border-radius:20px;max-width:440px;margin:0 auto;border:1px solid rgba(255,255,255,0.1);}</style></head>
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Cancelled</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background:#050a12; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align:center; padding:60px 20px; }
+        .box { background:#0d1522; padding:36px; border-radius:20px; max-width:440px; margin:0 auto; border:1px solid rgba(255,255,255,0.1); }
+        .btn { display:inline-block; padding:12px 28px; background:#38bdf8; color:#000; border-radius:12px; text-decoration:none; font-weight:700; margin-top:20px; }
+    </style>
+</head>
 <body>
 <div class="box">
-    <h1 style="color:#f87171;font-size:3rem;">✕</h1>
-    <h2>Payment Cancelled</h2>
-    <p style="color:#94a3b8;margin:15px 0 25px;">The checkout transaction was cancelled.</p>
-    <a href="/" style="display:inline-block;padding:12px 24px;background:#38bdf8;color:#000;border-radius:10px;text-decoration:none;font-weight:700;">Return to Home</a>
+    <div style="font-size:3rem; margin-bottom:10px;">❌</div>
+    <h2 style="font-size:1.4rem;">Payment Cancelled</h2>
+    <p style="color:#94a3b8; margin:15px 0 20px; font-size:0.9rem;">The checkout transaction was cancelled.</p>
+    <a href="${redirectUrl}" class="btn">Return to Store</a>
 </div>
+<script>
+    setTimeout(function() { window.location.href = "${redirectUrl}"; }, 2000);
+</script>
 </body></html>`);
     }
 
