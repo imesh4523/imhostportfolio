@@ -540,8 +540,8 @@ const server = http.createServer(async (req, res) => {
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: #050a12;
-            color: #f1f5f9;
+            background: #F8F9FD;
+            color: #181432;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             display: flex;
@@ -552,8 +552,8 @@ const server = http.createServer(async (req, res) => {
             padding: 20px;
         }
         .checkout-box {
-            background: rgba(13, 21, 34, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #FFFFFF;
+            border: 1px solid #ECEEF8;
             border-radius: 28px;
             padding: 32px 24px;
             max-width: 360px;
@@ -561,25 +561,24 @@ const server = http.createServer(async (req, res) => {
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(12px);
+            box-shadow: 0 20px 40px -15px rgba(24, 20, 50, 0.08);
         }
         #lottie-payment {
             width: 180px;
             height: 180px;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
         h3 {
             font-size: 1.15rem;
             font-weight: 800;
-            color: #ffffff;
+            color: #181432;
             letter-spacing: -0.01em;
             margin-bottom: 6px;
         }
         p {
             font-size: 0.85rem;
-            font-weight: 500;
-            color: #94a3b8;
+            font-weight: 600;
+            color: #7E7998;
             line-height: 1.4;
         }
     </style>
@@ -754,26 +753,102 @@ const server = http.createServer(async (req, res) => {
 
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Payment Successful</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/lottie.min.js"></script>
     <style>
-        body { background:#050a12; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align:center; padding:60px 20px; }
-        .box { background:#0d1522; padding:36px; border-radius:20px; max-width:440px; margin:0 auto; border:1px solid rgba(255,255,255,0.1); }
-        .btn { display:inline-block; padding:12px 28px; background:#00f5c4; color:#000; border-radius:12px; text-decoration:none; font-weight:700; margin-top:20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #F8F9FD;
+            color: #181432;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .box {
+            background: #FFFFFF;
+            padding: 36px 28px;
+            border-radius: 28px;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid #ECEEF8;
+            box-shadow: 0 20px 40px -15px rgba(24, 20, 50, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #lottie-box { width: 160px; height: 160px; margin-bottom: 8px; }
+        h2 { font-size: 1.35rem; font-weight: 800; color: #181432; margin-bottom: 8px; }
+        p { color: #7E7998; font-size: 0.85rem; font-weight: 600; line-height: 1.5; margin-bottom: 16px; }
+        .redirect-text { font-size: 0.75rem; font-weight: 700; color: #6C5CE7; margin-bottom: 16px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #FF5E62, #D92078, #6C5CE7);
+            color: #fff;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.88rem;
+            box-shadow: 0 8px 20px -6px rgba(108, 92, 231, 0.4);
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.92; transform: scale(1.02); }
     </style>
 </head>
 <body>
 <div class="box">
-    <div style="font-size:3rem; margin-bottom:10px;">✅</div>
-    <h2 style="font-size:1.4rem;">Payment Successful!</h2>
-    <p style="color:#94a3b8; margin:15px 0 20px; font-size:0.9rem;">Your payment #${paymentId || ''} has been completed and credited to your balance.</p>
+    <div id="lottie-box"></div>
+    <h2>Payment Successful!</h2>
+    <p>Your payment #${paymentId || ''} has been completed and credited to your balance.</p>
+    <div class="redirect-text">Redirecting to store in <span id="timer">3</span>s...</div>
     <a href="${redirectUrl}" class="btn">Return to Store</a>
 </div>
 <script>
-    setTimeout(function() { window.location.href = "${redirectUrl}"; }, 2000);
+    function startAnim() {
+        fetch('/assets/animation-payment.json')
+            .then(res => res.json())
+            .then(animationData => {
+                if (window.lottie) {
+                    window.lottie.loadAnimation({
+                        container: document.getElementById('lottie-box'),
+                        renderer: 'svg',
+                        loop: false,
+                        autoplay: true,
+                        animationData: animationData
+                    });
+                }
+            }).catch(() => {});
+    }
+    if (window.lottie) {
+        startAnim();
+    } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+        script.onload = startAnim;
+        document.head.appendChild(script);
+    }
+
+    let timeLeft = 3;
+    const timerEl = document.getElementById('timer');
+    const interval = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            window.location.href = "${redirectUrl}";
+        }
+    }, 1000);
 </script>
 </body></html>`);
     }
@@ -793,31 +868,107 @@ const server = http.createServer(async (req, res) => {
 
         res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
         return res.end(`<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Payment Cancelled</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/assets/lottie.min.js"></script>
     <style>
-        body { background:#050a12; color:#fff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align:center; padding:60px 20px; }
-        .box { background:#0d1522; padding:36px; border-radius:20px; max-width:440px; margin:0 auto; border:1px solid rgba(255,255,255,0.1); }
-        .btn { display:inline-block; padding:12px 28px; background:#38bdf8; color:#000; border-radius:12px; text-decoration:none; font-weight:700; margin-top:20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #F8F9FD;
+            color: #181432;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .box {
+            background: #FFFFFF;
+            padding: 36px 28px;
+            border-radius: 28px;
+            max-width: 380px;
+            width: 100%;
+            border: 1px solid #ECEEF8;
+            box-shadow: 0 20px 40px -15px rgba(24, 20, 50, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #lottie-box { width: 160px; height: 160px; margin-bottom: 8px; }
+        h2 { font-size: 1.35rem; font-weight: 800; color: #181432; margin-bottom: 8px; }
+        p { color: #7E7998; font-size: 0.85rem; font-weight: 600; line-height: 1.5; margin-bottom: 16px; }
+        .redirect-text { font-size: 0.75rem; font-weight: 700; color: #6C5CE7; margin-bottom: 16px; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #FF5E62, #D92078, #6C5CE7);
+            color: #fff;
+            border-radius: 16px;
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 0.88rem;
+            box-shadow: 0 8px 20px -6px rgba(108, 92, 231, 0.4);
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.92; transform: scale(1.02); }
     </style>
 </head>
 <body>
 <div class="box">
-    <div style="font-size:3rem; margin-bottom:10px;">❌</div>
-    <h2 style="font-size:1.4rem;">Payment Cancelled</h2>
-    <p style="color:#94a3b8; margin:15px 0 20px; font-size:0.9rem;">The checkout transaction was cancelled.</p>
+    <div id="lottie-box"></div>
+    <h2>Payment Cancelled</h2>
+    <p>The checkout transaction was cancelled.</p>
+    <div class="redirect-text">Redirecting to store in <span id="timer">3</span>s...</div>
     <a href="${redirectUrl}" class="btn">Return to Store</a>
 </div>
 <script>
-    setTimeout(function() { window.location.href = "${redirectUrl}"; }, 2000);
+    function startAnim() {
+        fetch('/assets/animation-payment.json')
+            .then(res => res.json())
+            .then(animationData => {
+                if (window.lottie) {
+                    window.lottie.loadAnimation({
+                        container: document.getElementById('lottie-box'),
+                        renderer: 'svg',
+                        loop: true,
+                        autoplay: true,
+                        animationData: animationData
+                    });
+                }
+            }).catch(() => {});
+    }
+    if (window.lottie) {
+        startAnim();
+    } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js';
+        script.onload = startAnim;
+        document.head.appendChild(script);
+    }
+
+    let timeLeft = 3;
+    const timerEl = document.getElementById('timer');
+    const interval = setInterval(() => {
+        timeLeft--;
+        if (timerEl) timerEl.innerText = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            window.location.href = "${redirectUrl}";
+        }
+    }, 1000);
 </script>
 </body></html>`);
     }
 
-    // 13. Serve Static Files from directory & 404 Route
+        // 13. Serve Static Files from directory & 404 Route
     let safePath = pathname === '/' ? '/index.html' : pathname;
     let filePath = path.join(__dirname, safePath);
 
