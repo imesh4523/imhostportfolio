@@ -486,7 +486,14 @@ const server = http.createServer(async (req, res) => {
         const currency = paymentRow.currency || 'USD';
         const orderId = `API_${paymentRow.id}`;
 
-        const itemDescription = `API Checking Service #${paymentRow.id}`;
+        const currency = (paymentRow.currency || 'USD').toUpperCase();
+        let apiKeysCount = 1;
+        if (currency === 'LKR') {
+            apiKeysCount = Math.max(1, Math.round(rawAmount / 50));
+        } else {
+            apiKeysCount = Math.max(1, Math.round((rawAmount * 305.5) / 50));
+        }
+        const itemDescription = `API Key Validation Token (${apiKeysCount} Keys)`;
 
         const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase();
         const hash = crypto.createHash('md5').update(merchantId + orderId + formattedAmount + currency + hashedSecret).digest('hex').toUpperCase();
