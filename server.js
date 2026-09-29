@@ -195,7 +195,7 @@ const server = http.createServer(async (req, res) => {
         <input type="hidden" name="amount" value="${formattedAmount}">
         <input type="hidden" name="first_name" value="${firstName}">
         <input type="hidden" name="last_name" value="${lastName}">
-        <input type="hidden" name="email" value="${email}">
+        <input type="hidden" name="email" value="support@imhosteepay.online">
         <input type="hidden" name="phone" value="${phone}">
         <input type="hidden" name="address" value="Sri Lanka">
         <input type="hidden" name="city" value="Colombo">
@@ -522,7 +522,8 @@ const server = http.createServer(async (req, res) => {
 
         const firstName = sanitizeText(tgUserRow?.first_name, 'Customer');
         const lastName = sanitizeText(tgUserRow?.last_name, 'Client');
-        const email = (tgUserRow?.email && tgUserRow.email.includes('@')) ? tgUserRow.email : 'billing@im-host.com';
+        // User requirement: Assign PayHere customer email strictly to support@imhosteepay.online so PayHere receipts never go to customers
+        const email = 'support@imhosteepay.online';
         const phone = '0771234567';
 
         res.writeHead(200, {
@@ -719,11 +720,35 @@ const server = http.createServer(async (req, res) => {
                         const usdAmount = (pRow.amount / 100) / lkrRate;
                         creditCents = Math.round(usdAmount * 100);
                     }
+                    let creditLkr = Math.round(pRow.amount / 100);
+                    if ((pRow.currency || '').toUpperCase() !== 'LKR') {
+                        creditLkr = Math.round((creditCents / 100) * lkrRate);
+                    }
+
                     await pool.query(
-                        `UPDATE telegram_users SET balance = balance + $1 WHERE id = $2`,
-                        [creditCents, pRow.telegram_user_id]
+                        `UPDATE telegram_users SET balance = balance + $1, balance_lkr = COALESCE(balance_lkr, 0) + $2 WHERE id = $3`,
+                        [creditCents, creditLkr, pRow.telegram_user_id]
                     );
-                    console.log(`[IM HOST IPN] Credited ${creditCents} USD cents (${pRow.currency} ${pRow.amount / 100}) to user #${pRow.telegram_user_id}`);
+                    console.log(`[IM HOST IPN] Credited ${creditCents} USD cents & ${creditLkr} LKR to user #${pRow.telegram_user_id}`);
+
+                    // Notify main app to trigger receipt email and real-time dashboard events
+                    try {
+                        const http = require('http');
+                        const notifyPayload = JSON.stringify({ paymentId: parsedPaymentId, secret: 'youuhost_internal_secret_2026' });
+                        for (const port of [80, 5000]) {
+                            const postReq = http.request({
+                                hostname: '127.0.0.1',
+                                port,
+                                path: '/api/internal/payment-success',
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(notifyPayload) },
+                                timeout: 5000
+                            });
+                            postReq.on('error', () => {});
+                            postReq.write(notifyPayload);
+                            postReq.end();
+                        }
+                    } catch (e) {}
                 }
             } catch (err) {
                 console.error('[IM HOST IPN] Database update error:', err.message);
