@@ -659,7 +659,10 @@ const server = http.createServer(async (req, res) => {
             status_code,
             md5sig,
             custom_1,
-            custom_2
+            custom_2,
+            method,
+            card_no,
+            card_holder_name
         } = body;
 
         const merchantSecret = (await getDbSetting('PAYHERE_MERCHANT_SECRET')) || process.env.PAYHERE_MERCHANT_SECRET || '';
@@ -680,10 +683,23 @@ const server = http.createServer(async (req, res) => {
 
             console.log(`[IM HOST IPN] Payment #${parsedPaymentId} SUCCESS! Updating shared DB.`);
 
+            // Detect actual payment method (FriMi, iPay, Q+ Payment, Google Pay, Mastercard, Visa, etc.)
+            let rawMethod = (method || '').trim();
+            let mUpper = rawMethod.toUpperCase();
+            let detectedMethod = 'card';
+            if (mUpper.includes('FRIMI')) detectedMethod = 'frimi';
+            else if (mUpper.includes('IPAY')) detectedMethod = 'ipay';
+            else if (mUpper.includes('QPLUS') || mUpper.includes('Q+')) detectedMethod = 'qplus';
+            else if (mUpper.includes('GOOGLE') || mUpper.includes('GPAY')) detectedMethod = 'google_pay';
+            else if (mUpper.includes('MASTER')) detectedMethod = 'mastercard';
+            else if (mUpper.includes('VISA')) detectedMethod = 'visa';
+            else if (mUpper.includes('AMEX')) detectedMethod = 'amex';
+            else if (rawMethod) detectedMethod = rawMethod.toLowerCase();
+
             try {
                 await pool.query(
-                    `UPDATE payments SET status = 'completed', external_id = $1, updated_at = NOW() WHERE id = $2`,
-                    [payment_id ? `PAYHERE_${payment_id}` : order_id, parsedPaymentId]
+                    `UPDATE payments SET status = 'completed', external_id = $1, payment_method = $2, txid = $3, updated_at = NOW() WHERE id = $4`,
+                    [payment_id ? `PAYHERE_${payment_id}` : order_id, detectedMethod, card_no || null, parsedPaymentId]
                 );
 
                 const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parsedPaymentId]);
@@ -734,7 +750,13 @@ const server = http.createServer(async (req, res) => {
                     // Notify main app to trigger receipt email and real-time dashboard events
                     try {
                         const http = require('http');
-                        const notifyPayload = JSON.stringify({ paymentId: parsedPaymentId, secret: 'youuhost_internal_secret_2026' });
+                        const notifyPayload = JSON.stringify({ 
+                            paymentId: parsedPaymentId, 
+                            secret: 'youuhost_internal_secret_2026',
+                            method: detectedMethod,
+                            cardNo: card_no || null,
+                            cardHolderName: card_holder_name || null
+                        });
                         for (const port of [80, 5000]) {
                             const postReq = http.request({
                                 hostname: '127.0.0.1',
