@@ -13,12 +13,23 @@ if (PORT === 5000) {
     PORT = 3000;
 }
 
-// PostgreSQL Shared Database Pool
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/shopbot',
-    ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('sslmode=require') ? { rejectUnauthorized: false } : false
-});
+// PostgreSQL Shared Database Pool (Robust SSL handling for DigitalOcean & remote PostgreSQL)
+const rawDbUrl = process.env.DATABASE_URL || '';
+const isLocalhost = !rawDbUrl || rawDbUrl.includes('localhost') || rawDbUrl.includes('127.0.0.1');
 
+// Strip ?sslmode=require so node-postgres doesn't fail with 'self-signed certificate in certificate chain'
+let cleanDbUrl = rawDbUrl;
+if (!isLocalhost && cleanDbUrl) {
+    cleanDbUrl = cleanDbUrl.replace(/[\?\&]sslmode=[^&]*/g, '');
+    if (cleanDbUrl.endsWith('?') || cleanDbUrl.endsWith('&')) {
+        cleanDbUrl = cleanDbUrl.slice(0, -1);
+    }
+}
+
+const pool = new Pool({
+    connectionString: cleanDbUrl,
+    ssl: isLocalhost ? false : { rejectUnauthorized: false }
+});
 pool.on('error', (err) => {
     console.error('[IM HOST DB] Database error:', err.message);
 });
