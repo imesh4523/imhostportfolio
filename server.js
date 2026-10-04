@@ -511,6 +511,52 @@ const server = http.createServer(async (req, res) => {
             return res.end(`<h2>Payment session #${paymentId} not found in database.</h2>`);
         }
 
+        const mainAppUrl = (await getDbSetting('APP_URL')) || 'https://youuhost.com';
+
+        // 1. Guard against non-pending status (already completed, expired, or failed)
+        if (paymentRow.status !== 'pending') {
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=UTF-8' });
+            return res.end(`<!DOCTYPE html>
+<html>
+<head><title>Payment Session Inactive - YouuHost</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F8F9FD;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center;color:#181432}.card{background:#fff;border:1px solid #ECEEF8;border-radius:24px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.05)}h3{margin-top:0;font-size:1.2rem}p{color:#7E7998;font-size:0.9rem;line-height:1.5}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#5B42F3;color:#fff;text-decoration:none;border-radius:14px;font-weight:700;font-size:0.9rem}</style></head>
+<body><div class="card">
+<h3>Checkout Session Inactive</h3>
+<p>This payment session (#${paymentRow.id}) is no longer active (Status: <b>${paymentRow.status}</b>).</p>
+<a href="${mainAppUrl}" class="btn">Return to Shop</a>
+</div></body></html>`);
+        }
+
+        // 2. Guard against sessions older than 15 minutes
+        const createdMs = new Date(paymentRow.created_at).getTime();
+        if (Date.now() - createdMs > 15 * 60 * 1000) {
+            await pool.query("UPDATE payments SET status = 'expired' WHERE id = $1", [paymentRow.id]);
+            res.writeHead(400, { 'Content-Type': 'text/html; charset=UTF-8' });
+            return res.end(`<!DOCTYPE html>
+<html>
+<head><title>Payment Session Expired - YouuHost</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F8F9FD;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center;color:#181432}.card{background:#fff;border:1px solid #ECEEF8;border-radius:24px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.05)}h3{margin-top:0;font-size:1.2rem}p{color:#7E7998;font-size:0.9rem;line-height:1.5}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#5B42F3;color:#fff;text-decoration:none;border-radius:14px;font-weight:700;font-size:0.9rem}</style></head>
+<body><div class="card">
+<h3>Payment Session Expired</h3>
+<p>This checkout session has expired. To prevent accidental charges, please initiate a new deposit from the shop.</p>
+<a href="${mainAppUrl}" class="btn">Return to Shop</a>
+</div></body></html>`);
+        }
+
+        // 3. One-Time Dispatch Protection: Prevent browser tab reload from repeatedly auto-submitting
+        if (!global.dispatchedCheckoutSessions) global.dispatchedCheckoutSessions = new Set();
+        if (global.dispatchedCheckoutSessions.has(paymentRow.id)) {
+            res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
+            return res.end(`<!DOCTYPE html>
+<html>
+<head><title>Payment Already Initiated - YouuHost</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F8F9FD;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center;color:#181432}.card{background:#fff;border:1px solid #ECEEF8;border-radius:24px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.05)}h3{margin-top:0;font-size:1.2rem}p{color:#7E7998;font-size:0.9rem;line-height:1.5}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#5B42F3;color:#fff;text-decoration:none;border-radius:14px;font-weight:700;font-size:0.9rem}</style></head>
+<body><div class="card">
+<h3>Payment Already Initiated</h3>
+<p>This payment session (#${paymentRow.id}) was already sent to PayHere. Please complete your payment in your banking/FriMi app or return to the shop.</p>
+<a href="${mainAppUrl}" class="btn">Return to Shop</a>
+</div></body></html>`);
+        }
+        global.dispatchedCheckoutSessions.add(paymentRow.id);
+        setTimeout(() => global.dispatchedCheckoutSessions.delete(paymentRow.id), 15 * 60 * 1000);
+
         const merchantId = (await getDbSetting('PAYHERE_MERCHANT_ID')) || process.env.PAYHERE_MERCHANT_ID || '';
         const merchantSecret = (await getDbSetting('PAYHERE_MERCHANT_SECRET')) || process.env.PAYHERE_MERCHANT_SECRET || '';
         const isSandbox = (await getDbSetting('PAYHERE_SANDBOX_MODE')) !== 'false';
