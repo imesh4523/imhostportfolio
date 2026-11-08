@@ -167,59 +167,21 @@ const server = http.createServer(async (req, res) => {
         return res.end();
     }
 
-    // 1. Live API Ping Endpoint
+    // 1. Live API Ping Endpoint (Used by Admin Dashboard to verify gateway connectivity)
     if (pathname === '/api/ping' || pathname === '/api/check') {
         const startTime = Date.now();
-                res.writeHead(200, {
-            'Content-Type': 'text/html; charset=UTF-8',
-            'Referrer-Policy': 'strict-origin-when-cross-origin'
+        res.writeHead(200, {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
+            'Access-Control-Allow-Origin': '*'
         });
-        return res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="origin">
-    <title>Connecting to Secure Gateway...</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #050a12; color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .spinner { width: 44px; height: 44px; border: 4px solid rgba(0, 245, 196, 0.15); border-top-color: #00f5c4; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        h3 { font-size: 1.15rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; }
-        p { font-size: 0.85rem; color: #94a3b8; }
-    </style>
-</head>
-<body>
-    <div class="spinner"></div>
-    <h3>Connecting to Secure Gateway...</h3>
-    <p>Please wait a moment while we redirect you to payment...</p>
-
-    <form id="payhereForm" method="post" action="${payhereUrl}">
-        <input type="hidden" name="merchant_id" value="${merchantId}">
-        <input type="hidden" name="return_url" value="${returnUrl}">
-        <input type="hidden" name="cancel_url" value="${cancelUrl}">
-        <input type="hidden" name="notify_url" value="${notifyUrl}">
-        <input type="hidden" name="order_id" value="${orderId}">
-        <input type="hidden" name="items" value="${itemDescription}">
-        <input type="hidden" name="currency" value="${currency}">
-        <input type="hidden" name="amount" value="${formattedAmount}">
-        <input type="hidden" name="first_name" value="${firstName}">
-        <input type="hidden" name="last_name" value="${lastName}">
-        <input type="hidden" name="email" value="support@imhosteepay.online">
-        <input type="hidden" name="phone" value="${phone}">
-        <input type="hidden" name="address" value="Sri Lanka">
-        <input type="hidden" name="city" value="Colombo">
-        <input type="hidden" name="country" value="Sri Lanka">
-        <input type="hidden" name="hash" value="${hash}">
-        <input type="hidden" name="custom_1" value="${paymentRow.telegram_user_id}">
-        <input type="hidden" name="custom_2" value="${paymentRow.id}">
-    </form>
-    <script>
-        document.getElementById('payhereForm').submit();
-    </script>
-</body>
-</html>`);
+        return res.end(JSON.stringify({
+            success: true,
+            status: 'online',
+            service: 'IM HOST PayHere Bypass Gateway',
+            time: new Date().toISOString(),
+            latencyMs: Date.now() - startTime
+        }));
     }
 
     // 6. User Dashboard: /dashboard
@@ -336,6 +298,14 @@ const server = http.createServer(async (req, res) => {
         .status-success { background: rgba(34, 197, 94, 0.12); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
         .btn-new-code { display: inline-block; margin-top: 15px; font-size: 0.8rem; color: #94a3b8; text-decoration: none; border-bottom: 1px dashed #64748b; }
         .btn-new-code:hover { color: #38bdf8; }
+        @media(max-width:480px) {
+            body { padding: 12px; }
+            .card { padding: 24px 16px; border-radius: 20px; }
+            h1 { font-size: 1.3rem !important; }
+            .url-row { flex-direction: column; align-items: stretch; gap: 8px; }
+            .btn-copy { width: 100%; padding: 12px; font-size: 0.9rem; }
+            .timer-badge { flex-direction: column; gap: 4px; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -483,20 +453,37 @@ const server = http.createServer(async (req, res) => {
 
     // 10. Checkout Route: /checkout (PayHere Auto Form & Direct Auto-Redirect)
     if (pathname === '/checkout' || pathname.startsWith('/checkout/')) {
-        let paymentId = parsedUrl.query.payment_id || parsedUrl.query.sessionId || parsedUrl.query.order_id;
+        let paymentId = parsedUrl.query.payment_id || parsedUrl.query.sessionId || parsedUrl.query.order_id || parsedUrl.query.orderId || parsedUrl.query.id;
         if (!paymentId && pathname.startsWith('/checkout/')) {
             paymentId = pathname.replace(/^\/checkout\/?/, '').trim();
         }
 
         if (!paymentId) {
             res.writeHead(400, { 'Content-Type': 'text/html; charset=UTF-8' });
-            return res.end(`<h2>Invalid Checkout Request: Missing payment ID.</h2>`);
+            return res.end(`<!DOCTYPE html>
+<html>
+<head><title>Invalid Request - IM HOST</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#050a12;color:#f1f5f9;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center}.card{background:#0d1522;border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px 24px;max-width:380px;width:100%}h3{color:#f87171}p{color:#94a3b8;font-size:0.9rem}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#00f5c4;color:#041019;text-decoration:none;border-radius:12px;font-weight:700}</style></head>
+<body><div class="card"><h3>Invalid Checkout Request</h3><p>Missing payment or order ID.</p><a href="/" class="btn">Return to Home</a></div></body></html>`);
         }
+
+        const mainAppUrl = (await getDbSetting('APP_URL')) || 'https://youuhost.com';
 
         let paymentRow = null;
         let tgUserRow = null;
         try {
-            const pRes = await pool.query('SELECT * FROM payments WHERE id = $1 LIMIT 1', [parseInt(paymentId, 10)]);
+            const rawIdStr = String(paymentId).trim();
+            const numMatch = rawIdStr.match(/\d+/);
+            const numericId = numMatch ? parseInt(numMatch[0], 10) : null;
+
+            let pRes;
+            if (numericId && !isNaN(numericId)) {
+                pRes = await pool.query(
+                    'SELECT * FROM payments WHERE id = $1 OR external_id = $2 OR external_id = $3 LIMIT 1',
+                    [numericId, rawIdStr, `API_${numericId}`]
+                );
+            } else {
+                pRes = await pool.query('SELECT * FROM payments WHERE external_id = $1 LIMIT 1', [rawIdStr]);
+            }
             paymentRow = pRes.rows[0];
             if (paymentRow) {
                 const uRes = await pool.query('SELECT * FROM telegram_users WHERE id = $1 LIMIT 1', [paymentRow.telegram_user_id]);
@@ -508,10 +495,15 @@ const server = http.createServer(async (req, res) => {
 
         if (!paymentRow) {
             res.writeHead(404, { 'Content-Type': 'text/html; charset=UTF-8' });
-            return res.end(`<h2>Payment session #${paymentId} not found in database.</h2>`);
+            return res.end(`<!DOCTYPE html>
+<html>
+<head><title>Order Not Found - YouuHost Gateway</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F8F9FD;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center;color:#181432}.card{background:#fff;border:1px solid #ECEEF8;border-radius:24px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.05)}h3{margin-top:0;font-size:1.2rem;color:#e11d48}p{color:#7E7998;font-size:0.9rem;line-height:1.5}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#5B42F3;color:#fff;text-decoration:none;border-radius:14px;font-weight:700;font-size:0.9rem}</style></head>
+<body><div class="card">
+<h3>Order Not Found</h3>
+<p>Payment order #${paymentId} was not found in database. Please return to the shop and initiate checkout.</p>
+<a href="${mainAppUrl}" class="btn">Return to Store</a>
+</div></body></html>`);
         }
-
-        const mainAppUrl = (await getDbSetting('APP_URL')) || 'https://youuhost.com';
 
         // 1. Guard against non-pending status (already completed, expired, or failed)
         if (paymentRow.status !== 'pending') {

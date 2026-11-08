@@ -3114,23 +3114,38 @@
 
         document.querySelectorAll('.word-animate').forEach(el => wordObserver.observe(el));
 
-        // HAMBURGER (mobile)
+        // HAMBURGER (mobile clean UI)
         const hamburger = document.getElementById('hamburger');
         const navLinksContainer = document.querySelector('.nav-links');
-        if (hamburger) {
+        if (hamburger && navLinksContainer) {
             hamburger.addEventListener('click', () => {
-                if (navLinksContainer.style.display === 'flex') {
+                const isOpen = navLinksContainer.style.display === 'flex';
+                if (isOpen) {
                     navLinksContainer.style.display = 'none';
                 } else {
                     navLinksContainer.style.display = 'flex';
                     navLinksContainer.style.flexDirection = 'column';
                     navLinksContainer.style.position = 'absolute';
-                    navLinksContainer.style.top = '70px';
+                    navLinksContainer.style.top = '100%';
                     navLinksContainer.style.left = '0';
                     navLinksContainer.style.right = '0';
-                    navLinksContainer.style.background = '#050a12';
-                    navLinksContainer.style.padding = '20px';
+                    navLinksContainer.style.background = 'rgba(5, 10, 18, 0.95)';
+                    navLinksContainer.style.backdropFilter = 'blur(20px)';
+                    navLinksContainer.style.webkitBackdropFilter = 'blur(20px)';
+                    navLinksContainer.style.borderBottom = '1px solid var(--glass-border)';
+                    navLinksContainer.style.padding = '24px 20px';
+                    navLinksContainer.style.gap = '18px';
+                    navLinksContainer.style.boxShadow = '0 20px 40px rgba(0,0,0,0.6)';
                 }
+            });
+
+            // Close mobile menu on clicking any navigation link
+            navLinksContainer.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    if (window.innerWidth <= 768) {
+                        navLinksContainer.style.display = 'none';
+                    }
+                });
             });
         }
 
