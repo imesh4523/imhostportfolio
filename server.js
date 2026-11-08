@@ -1,4 +1,4 @@
-require('dotenv').config();
+try { require('dotenv').config(); } catch(e) {}
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -470,27 +470,84 @@ const server = http.createServer(async (req, res) => {
 
         let paymentRow = null;
         let tgUserRow = null;
-        try {
-            const rawIdStr = String(paymentId).trim();
-            const numMatch = rawIdStr.match(/\d+/);
-            const numericId = numMatch ? parseInt(numMatch[0], 10) : null;
+        const rawIdStr = String(paymentId).trim();
+        const numMatch = rawIdStr.match(/\d+/);
+        const numericId = numMatch ? parseInt(numMatch[0], 10) : null;
 
-            let pRes;
-            if (numericId && !isNaN(numericId)) {
-                pRes = await pool.query(
-                    'SELECT * FROM payments WHERE id = $1 OR external_id = $2 OR external_id = $3 LIMIT 1',
-                    [numericId, rawIdStr, `API_${numericId}`]
-                );
-            } else {
-                pRes = await pool.query('SELECT * FROM payments WHERE external_id = $1 LIMIT 1', [rawIdStr]);
+        // Strategy 1: Fast direct API lookup from main application (youuhost.com)
+        if (numericId) {
+            try {
+                const apiTargets = [
+                    `${mainAppUrl}/api/payhere/payment/${numericId}`,
+                    `https://youuhost.com/api/payhere/payment/${numericId}`
+                ];
+                for (const apiUrl of apiTargets) {
+                    try {
+                        const apiRes = await fetch(apiUrl, { headers: { 'User-Agent': 'IM-HOST-Gateway/1.0' } });
+                        if (apiRes.ok) {
+                            const d = await apiRes.json();
+                            if (d && (d.payment_id || d.id)) {
+                                paymentRow = {
+                                    id: d.payment_id || d.id,
+                                    amount: Math.round(parseFloat(d.amount) * 100),
+                                    currency: d.currency || 'LKR',
+                                    status: d.status || 'pending',
+                                    created_at: new Date().toISOString(),
+                                    telegram_user_id: d.custom_1 || null
+                                };
+                                tgUserRow = {
+                                    first_name: d.first_name || 'Customer',
+                                    last_name: d.last_name || 'Client',
+                                    email: d.email || 'support@imhosteepay.online',
+                                    phone: d.phone || '0770000000'
+                                };
+                                break;
+                            }
+                        }
+                    } catch (errInner) {}
+                }
+            } catch (apiErr) {
+                console.warn('[IM HOST] API payment lookup error:', apiErr.message);
             }
-            paymentRow = pRes.rows[0];
-            if (paymentRow) {
-                const uRes = await pool.query('SELECT * FROM telegram_users WHERE id = $1 LIMIT 1', [paymentRow.telegram_user_id]);
-                tgUserRow = uRes.rows[0];
+        }
+
+        // Strategy 2: Direct Database Pool Query
+        if (!paymentRow) {
+            try {
+                let pRes;
+                if (numericId && !isNaN(numericId)) {
+                    pRes = await pool.query(
+                        'SELECT * FROM payments WHERE id = $1 OR external_id = $2 OR external_id = $3 LIMIT 1',
+                        [numericId, rawIdStr, `API_${numericId}`]
+                    );
+                } else {
+                    pRes = await pool.query('SELECT * FROM payments WHERE external_id = $1 LIMIT 1', [rawIdStr]);
+                }
+                paymentRow = pRes.rows[0];
+                if (paymentRow) {
+                    const uRes = await pool.query('SELECT * FROM telegram_users WHERE id = $1 LIMIT 1', [paymentRow.telegram_user_id]);
+                    tgUserRow = uRes.rows[0];
+                }
+            } catch (e) {
+                console.error('[IM HOST] Failed to fetch payment from DB:', e.message);
             }
-        } catch (e) {
-            console.error('[IM HOST] Failed to fetch payment from DB:', e.message);
+        }
+
+        // Strategy 3: URL Query Fallback (If parameters are supplied in URL query string)
+        if (!paymentRow && numericId && parsedUrl.query.email) {
+            const rawAmt = parseFloat(parsedUrl.query.amount) || 100;
+            paymentRow = {
+                id: numericId,
+                amount: Math.round(rawAmt * 100),
+                currency: (parsedUrl.query.currency || 'LKR').toUpperCase(),
+                status: 'pending',
+                created_at: new Date().toISOString(),
+                telegram_user_id: parsedUrl.query.custom_1 ? parseInt(parsedUrl.query.custom_1, 10) : null
+            };
+            tgUserRow = {
+                first_name: parsedUrl.query.first_name || 'Customer',
+                last_name: parsedUrl.query.last_name || 'Client'
+            };
         }
 
         if (!paymentRow) {
@@ -518,10 +575,10 @@ const server = http.createServer(async (req, res) => {
 </div></body></html>`);
         }
 
-        // 2. Guard against sessions older than 15 minutes
+        // 2. Guard against sessions older than 30 minutes
         const createdMs = new Date(paymentRow.created_at).getTime();
-        if (Date.now() - createdMs > 15 * 60 * 1000) {
-            await pool.query("UPDATE payments SET status = 'expired' WHERE id = $1", [paymentRow.id]);
+        if (Date.now() - createdMs > 30 * 60 * 1000) {
+            try { await pool.query("UPDATE payments SET status = 'expired' WHERE id = $1", [paymentRow.id]); } catch(e){}
             res.writeHead(400, { 'Content-Type': 'text/html; charset=UTF-8' });
             return res.end(`<!DOCTYPE html>
 <html>
@@ -533,25 +590,9 @@ const server = http.createServer(async (req, res) => {
 </div></body></html>`);
         }
 
-        // 3. One-Time Dispatch Protection: Prevent browser tab reload from repeatedly auto-submitting
-        if (!global.dispatchedCheckoutSessions) global.dispatchedCheckoutSessions = new Set();
-        if (global.dispatchedCheckoutSessions.has(paymentRow.id)) {
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=UTF-8' });
-            return res.end(`<!DOCTYPE html>
-<html>
-<head><title>Payment Already Initiated - YouuHost</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#F8F9FD;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:20px;text-align:center;color:#181432}.card{background:#fff;border:1px solid #ECEEF8;border-radius:24px;padding:32px 24px;max-width:380px;width:100%;box-shadow:0 10px 30px rgba(0,0,0,0.05)}h3{margin-top:0;font-size:1.2rem}p{color:#7E7998;font-size:0.9rem;line-height:1.5}.btn{display:inline-block;margin-top:16px;padding:12px 24px;background:#5B42F3;color:#fff;text-decoration:none;border-radius:14px;font-weight:700;font-size:0.9rem}</style></head>
-<body><div class="card">
-<h3>Payment Already Initiated</h3>
-<p>This payment session (#${paymentRow.id}) was already sent to PayHere. Please complete your payment in your banking/FriMi app or return to the shop.</p>
-<a href="${mainAppUrl}" class="btn">Return to Shop</a>
-</div></body></html>`);
-        }
-        global.dispatchedCheckoutSessions.add(paymentRow.id);
-        setTimeout(() => global.dispatchedCheckoutSessions.delete(paymentRow.id), 15 * 60 * 1000);
-
-        const merchantId = (await getDbSetting('PAYHERE_MERCHANT_ID')) || process.env.PAYHERE_MERCHANT_ID || '';
-        const merchantSecret = (await getDbSetting('PAYHERE_MERCHANT_SECRET')) || process.env.PAYHERE_MERCHANT_SECRET || '';
-        const isSandbox = (await getDbSetting('PAYHERE_SANDBOX_MODE')) !== 'false';
+        const merchantId = (await getDbSetting('PAYHERE_MERCHANT_ID')) || process.env.PAYHERE_MERCHANT_ID || '254006';
+        const merchantSecret = (await getDbSetting('PAYHERE_MERCHANT_SECRET')) || process.env.PAYHERE_MERCHANT_SECRET || 'NDAxNjExNjc2MTM1ODkxODgzODExMzA1MjE2ODY0MzI3ODY2NTQ2NQ==';
+        const isSandbox = (await getDbSetting('PAYHERE_SANDBOX_MODE')) === 'true';
         const payhereUrl = isSandbox ? 'https://sandbox.payhere.lk/pay/checkout' : 'https://www.payhere.lk/pay/checkout';
 
         const rawAmount = (paymentRow.amount / 100);
